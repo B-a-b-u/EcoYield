@@ -1,11 +1,14 @@
-import { Text } from "react-native"
-import { View } from "react-native-web"
+import { Text, View, SafeAreaView } from "react-native"
 
 const Settings = () =>{
     return(
+        <SafeAreaView>
         <View>
-            <Text>Settings</Text>
+            <Text>
+                settings
+            </Text>
         </View>
+    </SafeAreaView>
     )
 }
 
