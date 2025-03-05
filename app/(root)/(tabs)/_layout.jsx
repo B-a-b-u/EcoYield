@@ -12,7 +12,6 @@ const TabsLayout = () => {
                 }}
                 
             />
-
             <Tabs.Screen
                 name="FertilizerRecommendation"
                 options={{
