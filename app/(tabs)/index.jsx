@@ -1,10 +1,10 @@
 import { SafeAreaView, Text, TouchableOpacity, View, StyleSheet } from "react-native";
 import { Link } from "expo-router";
-import { ScrollView } from "react-native-web";
 
 
 export default function Index() {
   return (
+    
     <SafeAreaView style={styles.container}>
       <View style={styles.headerContainer}>
         <Text style={styles.title}>Personalized Fertilizer Recommendation</Text>

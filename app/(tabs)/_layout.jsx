@@ -28,6 +28,14 @@ const TabsLayout = () => {
                 }}
             />
 
+<Tabs.Screen
+                name="Nutrients"
+                options={{
+                    title: 'Nutrients',
+                    tabBarIcon: ({ color }) => <FontAwesome size={28} name="search" color={color} />,
+                }}
+            />
+
             <Tabs.Screen
                 name="Settings"
                 options={{

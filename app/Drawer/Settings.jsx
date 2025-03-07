@@ -2,24 +2,22 @@ import { Text, View, SafeAreaView, StyleSheet, KeyboardAvoidingView, TextInput, 
 import { useState, useEffect } from "react";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "firebase/auth";
 import { Link } from "expo-router";
-import app from '../../../lib/firebase.js';
+import app from '../../lib/firebase';
 
-const Settings = () => {
+const Settings = () => {s
     const auth = getAuth(app);
-
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
-    const [user, setUser] = useState(null);  // Store logged-in user
+    const [user, setUser] = useState(null);
 
-    // Listen for authentication state changes
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-            setUser(currentUser);  // Set user if logged in
+            setUser(currentUser);
         });
 
-        return () => unsubscribe();  // Cleanup listener on unmount
+        return () => unsubscribe();
     }, []);
 
     const handleLogin = async () => {
@@ -31,7 +29,7 @@ const Settings = () => {
             console.log("User Logged In:", userCredential.user);
         } catch (error) {
             console.error("Login Error:", error);
-            setErrorMessage(error.message);
+            setErrorMessage(error.messsage);
         }
 
         setIsLoading(false);
@@ -48,7 +46,7 @@ const Settings = () => {
 
     return (
         <SafeAreaView style={styles.container}>
-            {/* Show User Info if Logged In */}
+
             {user ? (
                 <View style={styles.loggedInContainer}>
                     <Text style={styles.welcomeText}>Welcome, {user.email}</Text>
@@ -68,6 +66,7 @@ const Settings = () => {
                             textContentType="emailAddress"
                             autoCapitalize="none"
                             onChangeText={setEmail}
+                            
                         />
                         <TextInput
                             value={password}
@@ -77,14 +76,13 @@ const Settings = () => {
                             textContentType="password"
                             secureTextEntry
                             onChangeText={setPassword}
+                            required
                         />
                         {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
 
                         <TouchableOpacity onPress={handleLogin} style={styles.submitButton} disabled={isLoading}>
                             {isLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitText}>Login</Text>}
                         </TouchableOpacity>
-
-                        {/* New User? Create Account Link */}
                         <TouchableOpacity>
                             <Link href="/Signup" style={styles.signupText}>New User? Create an Account</Link>
                         </TouchableOpacity>

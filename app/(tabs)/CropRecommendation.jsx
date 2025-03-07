@@ -8,6 +8,6 @@ const CropRecommendaion = () =>{
         </View>
     </SafeAreaView>
     )
-}
+}   
 
 export default CropRecommendaion;

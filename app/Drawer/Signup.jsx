@@ -11,11 +11,12 @@ import {
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { collection, doc, setDoc } from "firebase/firestore";
 import { useRouter } from "expo-router";
-import { auth, db } from "../lib/firebase"; // Import Firebase config
+import { auth, db } from "../../lib/firebase";
 
 const Signup = () => {
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const [userName, setUserName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -25,8 +26,7 @@ const Signup = () => {
     setIsLoading(true);
     setErrorMessage("");
 
-    // Validate input fields
-    if (!email || !password || !confirmPassword) {
+    if (!userName || !email || !password || !confirmPassword) {
       setErrorMessage("All fields are required.");
       setIsLoading(false);
       return;
@@ -45,18 +45,15 @@ const Signup = () => {
     }
 
     try {
-      // Create user with email and password
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       console.log("User Created:", userCredential.user);
 
-      // Store user data in Firestore
       await setDoc(doc(collection(db, "UserHistory"), userCredential.user.email), {
         email: userCredential.user.email,
         createdAt: new Date(),
-        plants: [],
+        history: [],
       });
 
-      // Redirect user to Dashboard or Home
       router.push("/");
     } catch (error) {
       console.error("Signup Error:", error);
@@ -70,6 +67,14 @@ const Signup = () => {
     <SafeAreaView style={styles.container}>
       <View style={styles.inputContainer}>
         <Text style={styles.title}>Create an Account</Text>
+        <TextInput
+          value={userName}
+          style={styles.input}
+          placeholder="User Name"
+          keyboardType="text"
+          autoCapitalize="none"
+          onChangeText={setUserName}
+        />
         <TextInput
           value={email}
           style={styles.input}
@@ -108,7 +113,7 @@ const Signup = () => {
   );
 };
 
-// Styling for the component
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
