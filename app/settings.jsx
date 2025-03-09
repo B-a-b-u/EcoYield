@@ -2,9 +2,9 @@ import { Text, View, SafeAreaView, StyleSheet, KeyboardAvoidingView, TextInput, 
 import { useState, useEffect } from "react";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "firebase/auth";
 import { Link } from "expo-router";
-import app from '../../lib/firebase';
+import app from '../lib/firebase';
 
-const Settings = () => {s
+const Settings = () => {
     const auth = getAuth(app);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');

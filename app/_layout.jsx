@@ -1,26 +1,30 @@
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Drawer } from 'expo-router/drawer';
 
-const RootLayout = () =>{
-    return(
-        <GestureHandlerRootView style={{ flex: 1 }}>
-      <Drawer>
+export default function RootLayout() {
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <Drawer screenOptions={{
+        title: "Eco Yield", 
+        headerTitleAlign: 'center',
+        drawerActiveBackgroundColor: '#4ea84e', 
+        drawerActiveTintColor: '#ffffff',
+        headerTintColor: '#ffffff',
+        headerStyle: {backgroundColor:'#4ea84e'}
+      }}>
         <Drawer.Screen
-          name="(tabs)" 
-          options={{ drawerLabel: 'Home', title: 'Home' }}
+          name="(tabs)"
+          options={{ drawerLabel: 'Home' }}
         />
         <Drawer.Screen
-          name="Drawer/signup" 
-          options={{ drawerLabel: 'Signup', title: 'Signup' }}
+          name="signup"
+          options={{ drawerLabel: 'Signup' }}
         />
         <Drawer.Screen
-          name="Drawer/settings" 
-          options={{ drawerLabel: 'Settings', title: 'Settings' }}
+          name="settings"
+          options={{ drawerLabel: 'Settings' }}
         />
       </Drawer>
     </GestureHandlerRootView>
-    )
+  )
 }
-
-
-export default RootLayout;

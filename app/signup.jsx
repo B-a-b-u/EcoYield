@@ -11,7 +11,7 @@ import {
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { collection, doc, setDoc } from "firebase/firestore";
 import { useRouter } from "expo-router";
-import { auth, db } from "../../lib/firebase";
+import { auth, db } from "../lib/firebase";
 
 const Signup = () => {
   const router = useRouter();
