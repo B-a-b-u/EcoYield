@@ -3,20 +3,21 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 
 const TabsLayout = () => {
     return (
-        <Tabs 
-        screenOptions={{ tabBarActiveTintColor: '#ffffff', tabBarInactiveTintColor: '#a6a6a6' ,headerShown: false,
-        tabBarStyle:{
-            backgroundColor: '#4ea84e',
-            borderRadius: 50,
-            marginHorizontal: 20,
-            marginBottom: 20,
-            position: 'absolute',
-            overflow: 'hidden',
-            height: 50,
-        }
+        <Tabs
+            screenOptions={{
+                tabBarActiveTintColor: '#ffffff', tabBarInactiveTintColor: '#a6a6a6', headerShown: false,
+                tabBarStyle: {
+                    backgroundColor: '#4ea84e',
+                    borderRadius: 50,
+                    marginHorizontal: 20,
+                    marginBottom: 20,
+                    position: 'absolute',
+                    overflow: 'hidden',
+                    height: 50,
+                }
 
-         }}>
-        
+            }}>
+
             <Tabs.Screen
                 name="index"
                 options={{
@@ -52,7 +53,7 @@ const TabsLayout = () => {
                 }}
             />
 
-<Tabs.Screen
+            <Tabs.Screen
                 name="profile"
                 options={{
                     title: 'Profile',
