@@ -53,7 +53,7 @@ const SignIn = () => {
 
     }
     return (
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <TouchableWithoutFeedback >
             <SafeAreaView style={styles.container}>
 
                 
@@ -79,7 +79,7 @@ const SignIn = () => {
                             textContentType="password"
                             secureTextEntry
                             onChangeText={setPassword}
-                            required
+                            
                         />
                         {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
 

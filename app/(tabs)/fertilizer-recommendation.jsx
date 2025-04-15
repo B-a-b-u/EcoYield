@@ -1,4 +1,4 @@
-import { Text, View, TouchableOpacity, StyleSheet, ScrollView } from "react-native"
+import { Text, View, TouchableOpacity, StyleSheet, ScrollView, Modal } from "react-native"
 import { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Picker } from '@react-native-picker/picker';
@@ -13,66 +13,15 @@ const FertilizerRecommendation = () => {
     const [recommendation, setRecommendation] = useState('');
     const [convertedAddress, setConvertedAddress] = useState('');
     const [errorMsg, setErrorMsg] = useState(null);
+    const [isModalVisible, setModalVisible] = useState(false);
+
 
     const clearData = () => {
         setSoilReport(null);
         setCropType('');
         setLocationData('');
         setConvertedAddress('');
-        setRecommendation('');
     };
-
-    const getDetails = async () => {
-        console.log("get Details called");
-        console.log("soil report : ", soilReport);
-        console.log("crop type :", cropType);
-        console.log("location :", locationData);
-
-        if (!soilReport || !cropType || !locationData) {
-            setErrorMsg("Please provide all inputs.");
-            return;
-        }
-        const formData = new FormData();
-        formData.append("file", {
-            uri: soilReport.uri,
-            name: soilReport.name,
-            type: soilReport.mimeType ||'application/pdf', 
-          });
-        const [latitude, longitude] = locationData.split(',').map(val => val.trim());
-        console.log("report : ",formData);
-        console.log("lat :",latitude," long : ",longitude);
-
-        console.log("Prepared file:", {
-            uri: soilReport.uri,
-            name: soilReport.name,
-            type: 'application/pdf',
-          });
-
-        try {
-            const response = await fetch(
-                `https://ecoyieldapi.onrender.com/fertilizer-prediction/?lat=${latitude}&lon=${longitude}&crop_type=${cropType}`,
-                {
-                  method: 'POST',
-                  headers: {
-                    Accept: 'application/json',
-                    // Don't set Content-Type!
-                  },
-                  body: formData,
-                }
-              );
-            const data = await response.json();
-            if (response.ok) {
-                console.log("Fertilizer Recommendation:", data.FR);
-                setRecommendation(data.FR);
-            } else {
-                console.error("Error from backend:", data.detail);
-                setErrorMsg(data.detail || "Error fetching recommendation");
-            }
-        } catch (error) {
-            console.error("Error sending request:", error);
-            setErrorMsg("Failed to fetch recommendation");
-        }
-    }
 
     const selectSoilReport = async () => {
         console.log("soil report selected");
@@ -115,12 +64,65 @@ const FertilizerRecommendation = () => {
         } catch (error) {
             setErrorMsg('Error getting location');
         }
+
+
+    };
+
+    const getDetails = async () => {
+        console.log("get Details called");
+        console.log("soil report : ", soilReport);
+        console.log("crop type :", cropType);
+        console.log("location :", locationData);
+
+        // if (!soilReport || !cropType || !locationData) {
+        //     setErrorMsg("Please provide all inputs.");
+        //     return;
+        // }
+
+        try {
+            setErrorMsg('');
+            setRecommendation('');
+
+            const formData = new FormData();
+            formData.append('file', {
+                uri: soilReport.uri,
+                type: 'application/pdf',
+                name: 'soilreport.pdf',
+            });
+
+            console.log("Form data : ", formData);
+
+            const [lat, lon] = locationData.split(',').map(coord => parseFloat(coord.trim()));
+
+            const response = await fetch(`https://ecoyieldapi.onrender.com/fertilizer-prediction/?lat=${lat}&lon=${lon}&crop_type=${cropType}`, {
+                method: 'POST',
+                body: formData,
+            });
+            console.log("Response : ", response);
+            const data = await response.json();
+            console.log("Data : ", data);
+            console.log("Response from /fertilizer-prediction/: ", data);
+            if (data.recommended_fertilizer) {
+                setRecommendation(`Recommended Fertilizer: ${data.recommended_fertilizer}`);
+                setModalVisible(true);
+            } else {
+                setErrorMsg("Failed to get fertilizer recommendation.");
+            }
+        } catch (error) {
+            console.error(" Error uploading PDF:", error);
+            setErrorMsg("Failed to upload PDF.");
+        }
+        finally {
+            clearData();
+        }
     };
 
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView contentContainerStyle={styles.scroll}>
-                <Text style={styles.header}>Fertilizer Recommendation</Text>
+                <View>
+                    <Text style={styles.header}>Fertilizer Recommendation</Text>
+                </View>
 
                 {/* Soil Report */}
                 <View style={styles.section}>
@@ -174,6 +176,28 @@ const FertilizerRecommendation = () => {
                         <Text style={styles.clearText}>Clear All</Text>
                     </TouchableOpacity>
                 </View>
+
+                <Modal
+                    animationType="slide"
+                    transparent={true}
+                    visible={isModalVisible}
+                    onRequestClose={() => setModalVisible(false)}
+                >
+                    <View style={styles.modalContainer}>
+                        <View style={styles.modalView}>
+                            <Text style={styles.modalTitle}>Fertilizer Recommendation</Text>
+                            <Text style={styles.modalText}>{recommendation}</Text>
+
+                            <TouchableOpacity
+                                style={styles.closeButton}
+                                onPress={() => setModalVisible(false)}
+                            >
+                                <Text style={styles.closeButtonText}>Close</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </Modal>
+
             </ScrollView>
         </SafeAreaView>
     );
@@ -194,6 +218,47 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         color: '#3A3A3A',
     },
+    modalContainer: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "rgba(0,0,0,0.5)",
+    },
+    modalView: {
+        backgroundColor: "white",
+        borderRadius: 20,
+        padding: 30,
+        alignItems: "center",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5,
+        width: '80%',
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: "bold",
+        marginBottom: 10,
+        color: '#28A745',
+    },
+    modalText: {
+        color: '#000000',
+        fontSize: 16,
+        textAlign: "center",
+        marginBottom: 20,
+    },
+    closeButton: {
+        backgroundColor: "#FF3B30",
+        borderRadius: 10,
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+    },
+    closeButtonText: {
+        color: "white",
+        fontSize: 16,
+    },
+
     section: {
         marginBottom: 20,
         backgroundColor: '#fff',
