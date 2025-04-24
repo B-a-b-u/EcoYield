@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     closeButton: {
-        backgroundColor: "#FF3B30",
+        backgroundColor: "#C62828",
         borderRadius: 10,
         paddingVertical: 10,
         paddingHorizontal: 20,
@@ -298,7 +298,7 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     clearButton: {
-        backgroundColor: '#FF3B30',
+        backgroundColor: '#e52222',
         paddingVertical: 12,
         borderRadius: 10,
         alignItems: 'center',

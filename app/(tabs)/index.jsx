@@ -12,6 +12,7 @@ const Index = () => {
           style={styles.logo}
           resizeMode="contain"
         />
+      
         <Text style={styles.title}>Welcome to EcoYield</Text>
         <Text style={styles.subtitle}>
           Sustainable Fertilizer Usage Optimization App
@@ -40,7 +41,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#2e7d32", // Green shade for eco feel
+    color: "#2e7d32", 
     marginBottom: 8,
   },
   subtitle: {

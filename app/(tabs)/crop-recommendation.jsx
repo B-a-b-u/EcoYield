@@ -109,7 +109,7 @@ const CropRecommendation = () => {
         <SafeAreaView style={styles.container}>
             <ScrollView contentContainerStyle={styles.scroll}>
                 <View>
-                    <Text style={styles.header}>Fertilizer Recommendation</Text>
+                    <Text style={styles.header}>Crop Recommendation</Text>
                 </View>
 
                 {/* Soil Report */}
