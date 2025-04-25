@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
     height: 40,
     resizeMode: "contain",
     // border: "1px solid black",
-    borderRadius: "20px",
+    borderRadius: 20,
   },
   title: {
     fontSize: 20,

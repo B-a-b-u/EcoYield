@@ -1,9 +1,10 @@
-import { Text, View, TouchableOpacity, StyleSheet, ScrollView, Modal } from "react-native"
+import { Text, View, TouchableOpacity, Platform, StyleSheet, ScrollView, Modal } from "react-native"
 import { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Picker } from '@react-native-picker/picker';
 import * as Location from 'expo-location';
 import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system';
 import axios from "axios";
 
 const FertilizerRecommendation = () => {
@@ -29,6 +30,7 @@ const FertilizerRecommendation = () => {
             const pickedFile = await DocumentPicker.getDocumentAsync({
                 type: 'application/pdf',
                 copyToCacheDirectory: true,
+
             });
             console.log("Picked file : ", pickedFile.assets[0].name);
             if (!pickedFile.canceled && pickedFile.assets.length > 0) {
@@ -68,6 +70,17 @@ const FertilizerRecommendation = () => {
 
     };
 
+
+    const convertFileToBase64 = (file) => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = (error) => reject(error);
+        });
+    };
+
+
     const getDetails = async () => {
         console.log("get Details called");
         console.log("soil report : ", soilReport);
@@ -79,25 +92,54 @@ const FertilizerRecommendation = () => {
         //     return;
         // }
 
+
+
         try {
             setErrorMsg('');
             setRecommendation('');
 
-            const formData = new FormData();
-            formData.append('file', {
-                uri: soilReport.uri,
-                type: 'application/pdf',
-                name: 'soilreport.pdf',
-            });
-
-            console.log("Form data : ", formData);
-
             const [lat, lon] = locationData.split(',').map(coord => parseFloat(coord.trim()));
+            let report = null;
+            let response = null;
+            if (Platform.OS === 'web') {
+                console.log("web platform");
+                console.log('report uri: ', soilReport.uri);
+                const responseBlob = await fetch(soilReport.uri);
+                const blob = await responseBlob.blob();
+                const base64File = await convertFileToBase64(blob);
+                console.log("base 64 : ", base64File);
+                response = await fetch("https://ecoyieldapi.onrender.com/fertilizer-prediction-64/?lat=10.996202&lon=76.932281&crop_type=Sugarcane", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                      base64_pdf: base64File
+                    }),
+                  });
+            }
+            else {
 
-            const response = await fetch(`https://ecoyieldapi.onrender.com/fertilizer-prediction/?lat=${lat}&lon=${lon}&crop_type=${cropType}`, {
-                method: 'POST',
-                body: formData,
-            });
+                const formData = new FormData();
+                formData.append('file', {
+                    uri: soilReport.uri,
+                    type: 'application/pdf',
+                    name: 'soilreport.pdf',
+                });
+
+                console.log("Form data : ", formData);
+
+
+                response = await fetch(`https://ecoyieldapi.onrender.com/fertilizer-prediction/?lat=${lat}&lon=${lon}&crop_type=${cropType}`, {
+                    method: 'POST',
+                    headers: {
+                        "Content-Type": "multipart/form-data"
+                    },
+                    body: formData,
+                });
+
+            }
+
             console.log("Response : ", response);
             const data = await response.json();
             console.log("Data : ", data);
@@ -108,6 +150,8 @@ const FertilizerRecommendation = () => {
             } else {
                 setErrorMsg("Failed to get fertilizer recommendation.");
             }
+
+
         } catch (error) {
             console.error(" Error uploading PDF:", error);
             setErrorMsg("Failed to upload PDF.");
@@ -124,7 +168,7 @@ const FertilizerRecommendation = () => {
                     <Text style={styles.header}>Fertilizer Recommendation</Text>
                 </View>
 
-                {/* Soil Report */}
+
                 <View style={styles.section}>
                     <Text style={styles.label}>1. Upload Soil Report</Text>
                     <TouchableOpacity style={styles.button} onPress={selectSoilReport}>
@@ -140,7 +184,7 @@ const FertilizerRecommendation = () => {
                     )}
                 </View>
 
-                {/* Crop Type */}
+
                 <View style={styles.section}>
                     <Text style={styles.label}>2. Select Crop Type</Text>
                     <View style={styles.pickerContainer}>
@@ -155,7 +199,7 @@ const FertilizerRecommendation = () => {
                     </View>
                 </View>
 
-                {/* Location */}
+
                 <View style={styles.section}>
                     <Text style={styles.label}>3. Get Location</Text>
                     <TouchableOpacity style={styles.button} onPress={getLocation}>
@@ -166,7 +210,7 @@ const FertilizerRecommendation = () => {
                     {errorMsg && <Text style={styles.error}>{errorMsg}</Text>}
                 </View>
 
-                {/* Actions */}
+
                 <View style={styles.section}>
                     <TouchableOpacity style={styles.submitButton} onPress={getDetails}>
                         <Text style={styles.submitText}>Get Recommendation</Text>

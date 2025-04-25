@@ -94,6 +94,8 @@ const SignIn = () => {
                 <Image source={images.google} style={styles.googleIcon} />
                 <Text style={styles.googleText}>Login With Google</Text>
             </TouchableOpacity> */}
+
+
                     </View>
                 </KeyboardAvoidingView>
             </SafeAreaView>

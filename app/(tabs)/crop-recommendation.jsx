@@ -112,7 +112,7 @@ const CropRecommendation = () => {
                     <Text style={styles.header}>Crop Recommendation</Text>
                 </View>
 
-                {/* Soil Report */}
+                
                 <View style={styles.section}>
                     <Text style={styles.label}>1. Upload Soil Report</Text>
                     <TouchableOpacity style={styles.button} onPress={selectSoilReport}>
@@ -129,7 +129,7 @@ const CropRecommendation = () => {
                 </View>
 
 
-                {/* Location */}
+               
                 <View style={styles.section}>
                     <Text style={styles.label}>3. Get Location</Text>
                     <TouchableOpacity style={styles.button} onPress={getLocation}>
@@ -140,7 +140,7 @@ const CropRecommendation = () => {
                     {errorMsg && <Text style={styles.error}>{errorMsg}</Text>}
                 </View>
 
-                {/* Actions */}
+                
                 <View style={styles.section}>
                     <TouchableOpacity style={styles.submitButton} onPress={get_recommendation}>
                         <Text style={styles.submitText}>Get Recommendation</Text>
