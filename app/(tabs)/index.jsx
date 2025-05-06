@@ -2,8 +2,16 @@ import { Text, View, Image, StyleSheet } from "react-native";
 import { useAuth } from "@/components/auth-context";
 import images from '@/constants/images'
 import { SafeAreaView } from "react-native-safe-area-context";
+import i18n from '@/constants/language';
+import { getLocales } from 'expo-localization';
+
+
 const Index = () => {
   const { user } = useAuth();
+
+  i18n.locale = getLocales()[0].languageCode ?? 'en';
+
+  console.log("language : ",i18n.locale);
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
@@ -13,9 +21,9 @@ const Index = () => {
           resizeMode="contain"
         />
       
-        <Text style={styles.title}>Welcome to EcoYield</Text>
+        <Text style={styles.title}>{i18n.t('welcome')}</Text>
         <Text style={styles.subtitle}>
-          Sustainable Fertilizer Usage Optimization App
+        {i18n.t('subWelcome')}
         </Text>
       </View>
     </SafeAreaView>

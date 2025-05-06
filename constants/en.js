@@ -1,4 +1,4 @@
-export default {
+const en = {
     title : 'EcoYield',
     welcome : 'Welcome to EcoYield',
     subWelcome : 'Sustainable Fertilizer Usage Optimization App',
@@ -11,6 +11,9 @@ export default {
         fetchLocation : 'Fetch My Location',
         getRecommendation : 'Get Crop Recommendation',
         clear : 'Clear All',
+        close : 'Close',
+        
+          
     },
     fertilizerRecommendation: {
         title : 'Fertilizer Recommendation',
@@ -21,5 +24,15 @@ export default {
         fetchLocation : 'Fetch My Location',
         getRecommendation : 'Get Crop Recommendation',
         clear : 'Clear All',
+        cropTypes: {
+            select: '-- Select Crop --',
+            maize: 'Maize',
+            sugarcane: 'Sugarcane',
+            cotton: 'Cotton',
+            paddy: 'Paddy',
+            wheat: 'Wheat',
+          }
     }
 }
+
+export {en};

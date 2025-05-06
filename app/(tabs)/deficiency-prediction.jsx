@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 const DeficiencyPrediction = () => {
     const [image, setImage] = useState(null);
     const [prediction, setPrediction] = useState(null);
+    const [confidence, setConfidence] = useState(0);
 
     const uploadImage = async () => {
         console.log('upload image called');
@@ -89,7 +90,8 @@ const DeficiencyPrediction = () => {
             console.log("data : ",data);
 
             if (response.ok) {
-                setPrediction(data.prediction);
+                setPrediction(data.predicted_class_label);
+                setConfidence(data.confidence);
             } else {
                 console.error('Prediction failed:', data);
                 alert('Prediction failed');
@@ -134,6 +136,8 @@ const DeficiencyPrediction = () => {
                 {prediction && (
                     <View style={styles.resultContainer}>
                         <Text style={styles.resultText}>Prediction: {prediction}</Text>
+                        <Text style={styles.resultText}>Confidence: {confidence}</Text>
+
                     </View>
                 )}
 

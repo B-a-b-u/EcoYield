@@ -5,8 +5,14 @@ import { Picker } from '@react-native-picker/picker';
 import * as Location from 'expo-location';
 import * as DocumentPicker from 'expo-document-picker';
 import axios from "axios";
+import { getLocales } from 'expo-localization';
+import i18n from '@/constants/language';
 
 const CropRecommendation = () => {
+
+  i18n.locale = getLocales()[0].languageCode ?? 'en';
+  console.log("language cr: ",i18n.locale);
+
 
     const [soilReport, setSoilReport] = useState(null);
     const [locationData, setLocationData] = useState('');
@@ -109,20 +115,20 @@ const CropRecommendation = () => {
         <SafeAreaView style={styles.container}>
             <ScrollView contentContainerStyle={styles.scroll}>
                 <View>
-                    <Text style={styles.header}>Crop Recommendation</Text>
+                    <Text style={styles.header}>{i18n.t('cropRecommendation.title')}</Text>
                 </View>
 
                 
                 <View style={styles.section}>
-                    <Text style={styles.label}>1. Upload Soil Report</Text>
+                    <Text style={styles.label}>{i18n.t('cropRecommendation.uploadreport')}</Text>
                     <TouchableOpacity style={styles.button} onPress={selectSoilReport}>
-                        <Text style={styles.buttonText}>Pick Soil Report</Text>
+                        <Text style={styles.buttonText}>{i18n.t('cropRecommendation.selectReportBtm')}</Text>
                     </TouchableOpacity>
                     {soilReport && (
                         <View style={styles.fileInfo}>
                             <Text style={styles.text}>Selected file: {soilReport.name}</Text>
                             <TouchableOpacity onPress={() => setSoilReport(null)}>
-                                <Text style={styles.removeText}>Remove File</Text>
+                                <Text style={styles.removeText}>{i18n.t('cropRecommendation.remove')}</Text>
                             </TouchableOpacity>
                         </View>
                     )}
@@ -131,11 +137,11 @@ const CropRecommendation = () => {
 
                
                 <View style={styles.section}>
-                    <Text style={styles.label}>3. Get Location</Text>
+                    <Text style={styles.label}>{i18n.t('cropRecommendation.getLocation')}</Text>
                     <TouchableOpacity style={styles.button} onPress={getLocation}>
-                        <Text style={styles.buttonText}>Fetch My Location</Text>
+                        <Text style={styles.buttonText}>{i18n.t('cropRecommendation.fetchLocation')}</Text>
                     </TouchableOpacity>
-                    {locationData ? <Text style={styles.text}>Coords: {locationData}</Text> : null}
+                    {locationData ? <Text style={styles.text}>{locationData}</Text> : null}
                     {convertedAddress ? <Text style={styles.text}>Address: {convertedAddress}</Text> : null}
                     {errorMsg && <Text style={styles.error}>{errorMsg}</Text>}
                 </View>
@@ -143,11 +149,11 @@ const CropRecommendation = () => {
                 
                 <View style={styles.section}>
                     <TouchableOpacity style={styles.submitButton} onPress={get_recommendation}>
-                        <Text style={styles.submitText}>Get Recommendation</Text>
+                        <Text style={styles.submitText}>{i18n.t('cropRecommendation.getRecommendation')}</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.clearButton} onPress={clearData}>
-                        <Text style={styles.clearText}>Clear All</Text>
+                        <Text style={styles.clearText}>{i18n.t('cropRecommendation.clear')}</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -159,14 +165,14 @@ const CropRecommendation = () => {
                 >
                     <View style={styles.modalContainer}>
                         <View style={styles.modalView}>
-                            <Text style={styles.modalTitle}>Crop Recommendation</Text>
+                            <Text style={styles.modalTitle}>{i18n.t('cropRecommendation.title')}</Text>
                             <Text style={styles.modalText}>{recommendation}</Text>
 
                             <TouchableOpacity
                                 style={styles.closeButton}
                                 onPress={() => setModalVisible(false)}
                             >
-                                <Text style={styles.closeButtonText}>Close</Text>
+                                <Text style={styles.closeButtonText}>{i18n.t('cropRecommendation.close')}</Text>
                             </TouchableOpacity>
                         </View>
                     </View>

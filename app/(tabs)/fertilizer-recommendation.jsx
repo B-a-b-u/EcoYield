@@ -6,6 +6,8 @@ import * as Location from 'expo-location';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
 import axios from "axios";
+import i18n from '@/constants/language';
+import { getLocales } from 'expo-localization';
 
 const FertilizerRecommendation = () => {
     const [soilReport, setSoilReport] = useState(null);
@@ -15,6 +17,9 @@ const FertilizerRecommendation = () => {
     const [convertedAddress, setConvertedAddress] = useState('');
     const [errorMsg, setErrorMsg] = useState(null);
     const [isModalVisible, setModalVisible] = useState(false);
+
+    i18n.locale = getLocales()[0].languageCode ?? 'en';
+
 
 
     const clearData = () => {
@@ -111,12 +116,12 @@ const FertilizerRecommendation = () => {
                 response = await fetch("https://ecoyieldapi.onrender.com/fertilizer-prediction-64/?lat=10.996202&lon=76.932281&crop_type=Sugarcane", {
                     method: "POST",
                     headers: {
-                      "Content-Type": "application/json",
+                        "Content-Type": "application/json",
                     },
                     body: JSON.stringify({
-                      base64_pdf: base64File
+                        base64_pdf: base64File
                     }),
-                  });
+                });
             }
             else {
 
@@ -165,20 +170,20 @@ const FertilizerRecommendation = () => {
         <SafeAreaView style={styles.container}>
             <ScrollView contentContainerStyle={styles.scroll}>
                 <View>
-                    <Text style={styles.header}>Fertilizer Recommendation</Text>
+                    <Text style={styles.header}>{i18n.t('fertilizerRecommendation.title')}</Text>
                 </View>
 
 
                 <View style={styles.section}>
-                    <Text style={styles.label}>1. Upload Soil Report</Text>
+                    <Text style={styles.label}>{i18n.t('fertilizerRecommendation.uploadreport')}</Text>
                     <TouchableOpacity style={styles.button} onPress={selectSoilReport}>
-                        <Text style={styles.buttonText}>Pick Soil Report</Text>
+                        <Text style={styles.buttonText}>{i18n.t('fertilizerRecommendation.selectReportBtm')}</Text>
                     </TouchableOpacity>
                     {soilReport && (
                         <View style={styles.fileInfo}>
                             <Text style={styles.text}>Selected file: {soilReport.name}</Text>
                             <TouchableOpacity onPress={() => setSoilReport(null)}>
-                                <Text style={styles.removeText}>Remove File</Text>
+                                <Text style={styles.removeText}>{i18n.t('fertilizerRecommendation.remove')}</Text>
                             </TouchableOpacity>
                         </View>
                     )}
@@ -186,38 +191,39 @@ const FertilizerRecommendation = () => {
 
 
                 <View style={styles.section}>
-                    <Text style={styles.label}>2. Select Crop Type</Text>
+                    <Text style={styles.label}>{i18n.t('fertilizerRecommendation.title')}</Text>
                     <View style={styles.pickerContainer}>
                         <Picker selectedValue={cropType} onValueChange={setCropType}>
-                            <Picker.Item label="-- Select Crop --" value="" />
-                            <Picker.Item label="Maize" value="Maize" />
-                            <Picker.Item label="Sugarcane" value="Sugarcane" />
-                            <Picker.Item label="Cotton" value="Cotton" />
-                            <Picker.Item label="Paddy" value="Paddy" />
-                            <Picker.Item label="Wheat" value="Wheat" />
+                            <Picker.Item label={i18n.t('fertilizerRecommendation.cropTypes.select')} value="" />
+                            <Picker.Item label={i18n.t('fertilizerRecommendation.cropTypes.maize')} value="Maize" />
+                            <Picker.Item label={i18n.t('fertilizerRecommendation.cropTypes.sugarcane')} value="Sugarcane" />
+                            <Picker.Item label={i18n.t('fertilizerRecommendation.cropTypes.cotton')} value="Cotton" />
+                            <Picker.Item label={i18n.t('fertilizerRecommendation.cropTypes.paddy')} value="Paddy" />
+                            <Picker.Item label={i18n.t('fertilizerRecommendation.cropTypes.wheat')} value="Wheat" />
                         </Picker>
+
                     </View>
                 </View>
 
 
                 <View style={styles.section}>
-                    <Text style={styles.label}>3. Get Location</Text>
+                    <Text style={styles.label}>{i18n.t('fertilizerRecommendation.getLocation')}</Text>
                     <TouchableOpacity style={styles.button} onPress={getLocation}>
-                        <Text style={styles.buttonText}>Fetch My Location</Text>
+                        <Text style={styles.buttonText}>{i18n.t('fertilizerRecommendation.fetchLocation')}</Text>
                     </TouchableOpacity>
-                    {locationData ? <Text style={styles.text}>Coords: {locationData}</Text> : null}
-                    {convertedAddress ? <Text style={styles.text}>Address: {convertedAddress}</Text> : null}
+                    {locationData ? <Text style={styles.text}>{locationData}</Text> : null}
+                    {convertedAddress ? <Text style={styles.text}>{convertedAddress}</Text> : null}
                     {errorMsg && <Text style={styles.error}>{errorMsg}</Text>}
                 </View>
 
 
                 <View style={styles.section}>
                     <TouchableOpacity style={styles.submitButton} onPress={getDetails}>
-                        <Text style={styles.submitText}>Get Recommendation</Text>
+                        <Text style={styles.submitText}>{i18n.t('fertilizerRecommendation.getRecommendation')}</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.clearButton} onPress={clearData}>
-                        <Text style={styles.clearText}>Clear All</Text>
+                        <Text style={styles.clearText}>{i18n.t('fertilizerRecommendation.clear')}</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -229,14 +235,14 @@ const FertilizerRecommendation = () => {
                 >
                     <View style={styles.modalContainer}>
                         <View style={styles.modalView}>
-                            <Text style={styles.modalTitle}>Fertilizer Recommendation</Text>
+                            <Text style={styles.modalTitle}>{i18n.t('fertilizerRecommendation.title')}</Text>
                             <Text style={styles.modalText}>{recommendation}</Text>
 
                             <TouchableOpacity
                                 style={styles.closeButton}
                                 onPress={() => setModalVisible(false)}
                             >
-                                <Text style={styles.closeButtonText}>Close</Text>
+                                <Text style={styles.closeButtonText}>{i18n.t('fertilizerRecommendation.title')}</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
