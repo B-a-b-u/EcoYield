@@ -5,11 +5,17 @@ import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import i18n from '@/constants/language';
 import { useLanguage } from '@/components/language-context';
+import { db } from '@/config/firebase'
+import { useAuth } from "@/components/auth-context";
+import { collection, addDoc } from 'firebase/firestore';
 
 const DeficiencyPrediction = () => {
     const [image, setImage] = useState(null);
     const [prediction, setPrediction] = useState(null);
     const [confidence, setConfidence] = useState(0);
+
+    const { user } = useAuth();
+
 
     const { language } = useLanguage();
     
@@ -18,6 +24,31 @@ const DeficiencyPrediction = () => {
         }, [language]);
     
         i18n.locale = i18n.locale ?? 'en'
+
+
+        const storePredictionToFirestore = async (prediction) => {
+        
+                if (user) {
+                    try {
+                        console.log("Firebase db: ", db);
+                        console.log('user : ',user);
+                        const predictionRef = collection(db, 'history');
+                        const record = {
+                            type : 'Nutrients',
+                            prediction,
+                            userId: user.uid,    
+                            timestamp: new Date().toISOString(),
+                          };
+                          
+        
+                        await addDoc(predictionRef, record);
+                        console.log('Prediction saved to Firestore:', record);
+                    } catch (error) {
+                        console.error('Error storing prediction in Firestore:', error);
+                    }
+                }
+        
+            };
     
 
     const uploadImage = async () => {
@@ -98,6 +129,7 @@ const DeficiencyPrediction = () => {
 
             if (response.ok) {
                 setPrediction(data.predicted_class_label);
+                await storePredictionToFirestore(data.predicted_class_label);
                 setConfidence(data.confidence);
             } else {
                 console.error('Prediction failed:', data);
@@ -149,7 +181,7 @@ const DeficiencyPrediction = () => {
 
 
                 <TouchableOpacity style={styles.button} onPress={getPrediction}>
-                    <Text style={styles.buttonText}>Get Predictions</Text>
+                    <Text style={styles.buttonText}>{i18n.t('nutrientsDeficiency.getPrediction')}</Text>
                 </TouchableOpacity>
 
             </ScrollView>

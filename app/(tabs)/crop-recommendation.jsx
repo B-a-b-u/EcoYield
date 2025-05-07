@@ -7,6 +7,9 @@ import axios from "axios";
 import { getLocales } from 'expo-localization';
 import i18n from '@/constants/language';
 import { useLanguage } from '@/components/language-context';
+import { db } from '@/config/firebase'
+import { useAuth } from "@/components/auth-context";
+import { collection, addDoc } from 'firebase/firestore';
 
 const CropRecommendation = () => {
 
@@ -18,12 +21,38 @@ const CropRecommendation = () => {
     const [isModalVisible, setModalVisible] = useState(false);
 
     const { language } = useLanguage();
+    const { user } = useAuth();
+
 
     useEffect(() => {
         i18n.locale = language;
     }, [language]);
 
     i18n.locale = i18n.locale ?? 'en'
+
+        const storePredictionToFirestore = async (prediction) => {
+    
+            if (user) {
+                try {
+                    console.log("Firebase db: ", db);
+                    console.log('user : ',user);
+                    const predictionRef = collection(db, 'history');
+                    const record = {
+                        type : 'Crop',
+                        prediction,
+                        userId: user.uid,    
+                        timestamp: new Date().toISOString(),
+                      };
+                      
+    
+                    await addDoc(predictionRef, record);
+                    console.log('Prediction saved to Firestore:', record);
+                } catch (error) {
+                    console.error('Error storing prediction in Firestore:', error);
+                }
+            }
+    
+        };
 
 
     const selectSoilReport = async () => {
@@ -105,6 +134,7 @@ const CropRecommendation = () => {
             console.log("response from cr : ", data);
             if (data) {
                 setRecommendation(data.recommended_crop);
+                await storePredictionToFirestore(data.recommended_crop);
                 setModalVisible(true);
             }
         }

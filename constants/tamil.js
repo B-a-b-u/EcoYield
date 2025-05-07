@@ -52,7 +52,20 @@ const tamil = {
         noImage: "புகைப்படம் தேர்ந்தெடுக்கப்படவில்லை",
         prediction: "கணிப்பு",
         confidence: "நம்பகத்தன்மை",
-    }
+        getPrediction : 'கணிப்பை பெறவும்',
+    },
+
+    profile: {
+        title: 'சுயவிவரம்',
+        appLanguage: 'பயன்பாட்டு மொழி:',
+        email: 'மின்னஞ்சல்:',
+        logout: 'வெளியேறு',
+        yourHistory: 'உங்கள் வரலாறு:',
+        noHistory: 'வரலாறு இல்லை.',
+        notLoggedIn: 'நீங்கள் உள்நுழையவில்லை.',
+        signIn: 'உள்நுழை',
+        createAccount: 'கணக்கை உருவாக்கு'
+      }
     
 }
 

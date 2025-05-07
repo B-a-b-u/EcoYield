@@ -1,107 +1,200 @@
-import { Text, View, TouchableOpacity, StyleSheet } from "react-native"
+import { Text, View, TouchableOpacity, StyleSheet, FlatList, ScrollView } from "react-native";
 import { Link } from "expo-router";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/components/auth-context";
-import LanguageSelector from '@/components/LanguageSelector'
-
+import LanguageSelector from "@/components/LanguageSelector";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { db } from "@/config/firebase";
+import i18n from '@/constants/language';
+import { useLanguage } from '@/components/language-context';
 
 const Profile = () => {
-    const { user, logout } = useAuth();
-    return (
-        <View style={styles.container}>
-        <Text style={styles.heading}>👤 Profile</Text>
+  const { user, logout } = useAuth();
+  const [history, setHistory] = useState([]);
+
+      const { language } = useLanguage();
   
+
+  useEffect(() => {
+    const fetchHistory = async () => {
+      if (!user) return;
+
+      try {
+        const q = query(collection(db, "history"), where("userId", "==", user.uid));
+        const querySnapshot = await getDocs(q);
+        const data = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        setHistory(data);
+      } catch (error) {
+        console.error("Error fetching history:", error);
+      }
+    };
+
+    fetchHistory();
+  }, [user]);
+
+  return (
+    <ScrollView contentContainerStyle={styles.scrollContainer}>
+       <View style={styles.languageCard}>
+          <Text style={styles.label}>🌐 {i18n.t('profile.appLanguage')}</Text>
+          <LanguageSelector />
+        </View>
+      <View style={styles.container}>
+        <Text style={styles.heading}>👤 {i18n.t('profile.title')}</Text>
+
         {user ? (
           <View style={styles.userCard}>
-            <Text style={styles.label}>Email:</Text>
+            <Text style={styles.label}>{i18n.t('profile.email')}</Text>
             <Text style={styles.value}>{user.email}</Text>
-  
+
             <TouchableOpacity style={styles.logoutButton} onPress={logout}>
-              <Text style={styles.logoutText}>Logout</Text>
+              <Text style={styles.logoutText}>{i18n.t('profile.logout')}</Text>
             </TouchableOpacity>
+
+            <Text style={styles.label}>{i18n.t('profile.yourHistory')}:</Text>
+            {history.length > 0 ? (
+              history.map((item) => (
+                <View key={item.id} style={styles.historyItem}>
+                  <View>
+                    <Text style={styles.value}>🧠 {item.prediction}</Text>
+                    <Text style={styles.timestamp}>
+                      {new Date(item.timestamp).toLocaleString()}
+                    </Text>
+                  </View>
+                </View>
+              ))
+            ) : (
+              <Text style={styles.infoText}>{i18n.t('profile.noHistory')}</Text>
+            )}
           </View>
         ) : (
           <View style={styles.guestContainer}>
-            <Text style={styles.infoText}>You're not logged in.</Text>
-  
+            <Text style={styles.infoText}>{i18n.t('profile.notLoggedIn')}.</Text>
             <Link href="/sign-in" style={styles.linkButton}>
-              <Text style={styles.linkText}>Sign In</Text>
+              <Text style={styles.linkText}>{i18n.t('profile.signIn')}</Text>
             </Link>
-  
             <Link href="/sign-up" style={styles.linkButton}>
-              <Text style={styles.linkText}>Create Account</Text>
+              <Text style={styles.linkText}>{i18n.t('profile.createAccount')}</Text>
             </Link>
           </View>
         )}
-      <LanguageSelector />
+
+       
       </View>
-    );
-  };
-  
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: "#f2f2f2",
-      padding: 24,
-      justifyContent: "center",
-    },
-    heading: {
-      fontSize: 28,
-      fontWeight: "bold",
-      marginBottom: 24,
-      textAlign: "center",
-      color: "#333",
-    },
-    userCard: {
-      backgroundColor: "#fff",
-      padding: 20,
-      borderRadius: 16,
-      shadowColor: "#000",
-      shadowOpacity: 0.1,
-      shadowRadius: 10,
-      elevation: 5,
-    },
-    label: {
-      fontSize: 16,
-      fontWeight: "600",
-      marginTop: 12,
-      color: "#555",
-    },
-    value: {
-      fontSize: 16,
-      color: "#222",
-    },
-    logoutButton: {
-      marginTop: 24,
-      backgroundColor: "#ff5c5c",
-      padding: 14,
-      borderRadius: 12,
-      alignItems: "center",
-    },
-    logoutText: {
-      color: "#fff",
-      fontSize: 16,
-      fontWeight: "600",
-    },
-    guestContainer: {
-      alignItems: "center",
-    },
-    infoText: {
-      fontSize: 18,
-      marginBottom: 20,
-      color: "#444",
-    },
-    linkButton: {
-      backgroundColor: "#4e88ff",
-      padding: 14,
-      borderRadius: 12,
-      width: "100%",
-      marginBottom: 10,
-      alignItems: "center",
-    },
-    linkText: {
-      color: "#fff",
-      fontSize: 16,
-      fontWeight: "600",
-    },
-  });
+    </ScrollView>
+  );
+};
+
+const styles = StyleSheet.create({
+  scrollContainer: {
+    paddingBottom: 30,
+  },
+  container: {
+    flex: 1,
+    backgroundColor: "#f9fafe",
+    padding: 24,
+  },
+  heading: {
+    fontSize: 30,
+    fontWeight: "bold",
+    marginBottom: 20,
+    textAlign: "center",
+    color: "#1a1a1a",
+  },
+  userCard: {
+    backgroundColor: "#ffffff",
+    padding: 20,
+    borderRadius: 20,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 10,
+    elevation: 3,
+    marginBottom: 30,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginTop: 10,
+    color: "#666",
+  },
+  value: {
+    fontSize: 17,
+    color: "#222",
+    marginTop: 2,
+  },
+  logoutButton: {
+    marginTop: 20,
+    backgroundColor: "#e63946",
+    paddingVertical: 12,
+    borderRadius: 14,
+    alignItems: "center",
+  },
+  logoutText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  historyItem: {
+    backgroundColor: "#f1f5f9",
+    padding: 14,
+    borderRadius: 12,
+    marginVertical: 8,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  timestamp: {
+    fontSize: 12,
+    color: "#888",
+    marginTop: 4,
+    textAlign: "right",
+  },
+  guestContainer: {
+    alignItems: "center",
+    backgroundColor: "#fff",
+    padding: 24,
+    borderRadius: 16,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 8,
+    elevation: 2,
+    marginBottom: 30,
+  },
+  infoText: {
+    fontSize: 17,
+    color: "#555",
+    marginBottom: 16,
+    textAlign: "center",
+  },
+  linkButton: {
+    backgroundColor: "#4e88ff",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    marginVertical: 6,
+    width: "100%",
+    alignItems: "center",
+  },
+  linkText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  languageCard: {
+    backgroundColor: "#ffffff",
+    padding: 20,
+    borderRadius: 16,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 8,
+    elevation: 2,
+  },
+});
+
 export default Profile;

@@ -8,6 +8,9 @@ import * as FileSystem from 'expo-file-system';
 import axios from "axios";
 import i18n from '@/constants/language';
 import { useLanguage } from '@/components/language-context';
+import { db } from '@/config/firebase'
+import { useAuth } from "@/components/auth-context";
+import { collection, addDoc } from 'firebase/firestore';
 
 const FertilizerRecommendation = () => {
     const [soilReport, setSoilReport] = useState(null);
@@ -18,13 +21,40 @@ const FertilizerRecommendation = () => {
     const [errorMsg, setErrorMsg] = useState(null);
     const [isModalVisible, setModalVisible] = useState(false);
 
+    const { user } = useAuth();
+
+
     const { language } = useLanguage();
 
     useEffect(() => {
-      i18n.locale = language;
+        i18n.locale = language;
     }, [language]);
 
     i18n.locale = i18n.locale ?? 'en'
+
+    const storePredictionToFirestore = async (prediction) => {
+
+        if (user) {
+            try {
+                console.log("Firebase db: ", db);
+                console.log('user : ',user);
+                const predictionRef = collection(db, 'history');
+                const record = {
+                    type : 'Fertilizer',
+                    prediction,
+                    userId: user.uid,    
+                    timestamp: new Date().toISOString(),
+                  };
+                  
+
+                await addDoc(predictionRef, record);
+                console.log('Prediction saved to Firestore:', record);
+            } catch (error) {
+                console.error('Error storing prediction in Firestore:', error);
+            }
+        }
+
+    };
 
 
 
@@ -156,6 +186,7 @@ const FertilizerRecommendation = () => {
             console.log("Data : ", data);
             console.log("Response from /fertilizer-prediction/: ", data);
             if (data.recommended_fertilizer) {
+                await storePredictionToFirestore(data.recommended_fertilizer);
                 setRecommendation(`Recommended Fertilizer: ${data.recommended_fertilizer}`);
                 setModalVisible(true);
             } else {
@@ -176,6 +207,7 @@ const FertilizerRecommendation = () => {
         <SafeAreaView style={styles.container}>
             <ScrollView contentContainerStyle={styles.scroll}>
                 <View>
+                    {user && <Text>{user.email}</Text>}
                     <Text style={styles.header}>{i18n.t('fertilizerRecommendation.title')}</Text>
                 </View>
 

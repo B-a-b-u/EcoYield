@@ -50,7 +50,20 @@ const en = {
         noImage : 'No Image Selected',
         prediction : 'Prediction',
         confidence : 'Confidence',
-    }
+        getPrediction : 'Get Prediction',
+    },
+
+    profile: {
+        title: 'Profile',
+        appLanguage: 'App Language:',
+        email: 'Email:',
+        logout: 'Logout',
+        yourHistory: 'Your History:',
+        noHistory: 'No history available.',
+        notLoggedIn: "You're not logged in.",
+        signIn: 'Sign In',
+        createAccount: 'Create Account'
+      }
 }
 
 export {en};
