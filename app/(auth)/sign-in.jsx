@@ -1,10 +1,13 @@
 import { Text, View, TextInput, Alert, TouchableWithoutFeedback, ActivityIndicator, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from "react-native"
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { auth } from "../../config/firebase";
 import { Link, useRouter } from "expo-router";
 import { FirebaseError } from "@firebase/app";
 import { signInWithEmailAndPassword } from "firebase/auth";
+import { useLanguage } from '@/components/language-context';
+import i18n from '@/constants/language';
+
 
 const SignIn = () => {
     const [email, setEmail] = useState('');
@@ -13,6 +16,13 @@ const SignIn = () => {
     const [errorMessage, setErrorMessage] = useState('');
 
     const router = useRouter();
+    const { language } = useLanguage();
+
+    useEffect(() => {
+        i18n.locale = language || 'en';
+    }, [language]);
+
+
 
     const handleSignIn = async () => {
         console.log("login caled");
@@ -32,15 +42,15 @@ const SignIn = () => {
         catch (error) {
             console.log("Error on login:", error);
             if (error.code === "auth/user-not-found") {
-                setErrorMessage("No user found with this email.");
+                setErrorMessage(i18n.t('signIn.userNotFound'));
             } else if (error.code === "auth/wrong-password") {
-                setErrorMessage("Incorrect password.");
+                setErrorMessage(i18n.t('signIn.wrongPassword'));
             } else if (error.code === "auth/invalid-email") {
-                setErrorMessage("Invalid email format.");
+                setErrorMessage(i18n.t('signIn.invalidEmail'));
             } else if (error.code === "auth/too-many-requests") {
-                setErrorMessage("Too many attempts. Try again later.");
+                setErrorMessage(i18n.t('signIn.tooManyRequests'));
             } else {
-                setErrorMessage("Login failed. Please try again.");
+                setErrorMessage(i18n.t('signIn.default'));
             }
         }
         finally {
@@ -57,11 +67,11 @@ const SignIn = () => {
             <SafeAreaView style={styles.container}>
                 <KeyboardAvoidingView style={styles.keyboardAvoidingContainer} behavior="padding">
                     <View style={styles.inputContainer}>
-                        <Text style={styles.title}>Login</Text>
+                        <Text style={styles.title}>{i18n.t('signIn.title')} </Text>
                         <TextInput
                             value={email}
                             style={styles.input}
-                            placeholder="Email"
+                            placeholder={i18n.t('signIn.emailPlaceholder')}
                             keyboardType="email-address"
                             textContentType="emailAddress"
                             autoCapitalize="none"
@@ -72,7 +82,7 @@ const SignIn = () => {
                         <TextInput
                             value={password}
                             style={styles.input}
-                            placeholder="Password"
+                            placeholder={i18n.t('signIn.passwordPlaceholder')}
                             autoCapitalize="none"
                             textContentType="password"
                             secureTextEntry
@@ -82,10 +92,10 @@ const SignIn = () => {
                         {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
 
                         <TouchableOpacity onPress={handleSignIn} style={styles.submitButton} disabled={isLoading}>
-                            {isLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitText}>Login</Text>}
+                            {isLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitText}>{i18n.t('signIn.loginButton')}</Text>}
                         </TouchableOpacity>
                         <TouchableOpacity>
-                            <Link href="/sign-up" style={styles.signupText}>New User? Create an Account</Link>
+                            <Link href="/sign-up" style={styles.signupText}>{i18n.t('signIn.newUser')}</Link>
                         </TouchableOpacity>
 
                         {/* <TouchableOpacity style={styles.googleButton} onPress={handleGoogleLogin}>

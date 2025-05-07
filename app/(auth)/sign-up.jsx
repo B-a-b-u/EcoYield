@@ -1,10 +1,12 @@
 import { Text, View, TextInput, Alert, Image, ActivityIndicator, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from "react-native"
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { auth } from "../../config/firebase";
 import { Link, useRouter } from "expo-router";
 import { FirebaseError } from "@firebase/app";
 import { createUserWithEmailAndPassword, updateProfile } from "@firebase/auth";
+import i18n from '@/constants/language';
+import { useLanguage } from '@/components/language-context';
 
 const SignUp = () => {
     const [email, setEmail] = useState("");
@@ -17,6 +19,13 @@ const SignUp = () => {
     const [isloading, setIsLoading] = useState(false);
 
     const router = useRouter();
+
+        const { language } = useLanguage();
+    
+        useEffect(() => {
+            i18n.locale = language || 'en';
+        }, [language]);
+    
 
     const handleSignUp = async () => {
         console.log("handle sign up called");
@@ -84,7 +93,7 @@ const SignUp = () => {
                 <ActivityIndicator size="large" color="#3498db" />
             ) : user ? (
                 <View style={styles.profileContainer}>
-                    <Text style={styles.profileText}>Welcome, {user.displayName}!</Text>
+                    <Text style={styles.profileText}>{i18n.t('signUp.welcome')}, {user.displayName}!</Text>
                     <Text style={styles.infoText}>Email: {user.email}</Text>
                     {user.photoURL && (
                         <Image
@@ -97,13 +106,13 @@ const SignUp = () => {
                 <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.formContainer}>
                     <TextInput
                         style={styles.input}
-                        placeholder="Name"
+                        placeholder={i18n.t('signUp.name')}
                         value={name}
                         onChangeText={setName}
                     />
                     <TextInput
                         style={styles.input}
-                        placeholder="Email"
+                        placeholder={i18n.t('signUp.email')}
                         value={email}
                         onChangeText={setEmail}
                         keyboardType="email-address"
@@ -111,32 +120,32 @@ const SignUp = () => {
                     />
                     <TextInput
                         style={styles.input}
-                        placeholder="Password"
+                        placeholder={i18n.t('signUp.password')}
                         value={password}
                         secureTextEntry
                         onChangeText={setPassword}
                     />
                     <TextInput
                         style={styles.input}
-                        placeholder="Confirm Password"
+                        placeholder={i18n.t('signUp.confirmPassword')}
                         value={confirmPassword}
                         secureTextEntry
                         onChangeText={setConfirmPassword}
                     />
                     <TextInput
                         style={styles.input}
-                        placeholder="Location"
+                        placeholder={i18n.t('signUp.location')}
                         value={location}
                         onChangeText={setLocation}
                     />
 
 
                     <Link href="/sign-in" style={styles.linkText}>
-                        Already Have an Account? Login Here
+                    {i18n.t('signUp.loginLink')}
                     </Link>
 
                     <TouchableOpacity style={styles.button} onPress={handleSignUp} disabled={isloading}>
-                        <Text style={styles.buttonText}>Create Account</Text>
+                        <Text style={styles.buttonText}>{i18n.t('signUp.createAccount')}</Text>
                     </TouchableOpacity>
                 </KeyboardAvoidingView>
             )}

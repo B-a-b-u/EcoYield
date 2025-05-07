@@ -34,7 +34,7 @@ const Profile = () => {
     };
 
     fetchHistory();
-  }, [user]);
+  }, []);
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -120,6 +120,8 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginTop: 10,
     color: "#666",
+    alignItems : 'center',
+    justifyContent : 'center',
   },
   value: {
     fontSize: 17,
@@ -194,6 +196,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowRadius: 8,
     elevation: 2,
+    alignItems:  'center',
+    justifyContent : 'center',
   },
 });
 

@@ -1,62 +1,33 @@
-import { Text, View, TouchableOpacity, Platform, StyleSheet, ScrollView, Modal } from "react-native"
+import { Text, View, TouchableOpacity, Platform, StyleSheet, ScrollView, Modal } from "react-native";
 import { useState, useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Picker } from '@react-native-picker/picker';
 import * as Location from 'expo-location';
 import * as DocumentPicker from 'expo-document-picker';
-import * as FileSystem from 'expo-file-system';
 import axios from "axios";
 import i18n from '@/constants/language';
 import { useLanguage } from '@/components/language-context';
-import { db } from '@/config/firebase'
+import { db } from '@/config/firebase';
 import { useAuth } from "@/components/auth-context";
 import { collection, addDoc } from 'firebase/firestore';
+import ActivityIndicator from "../../components/ActivityIndicator";
 
 const FertilizerRecommendation = () => {
     const [soilReport, setSoilReport] = useState(null);
     const [cropType, setCropType] = useState('');
     const [locationData, setLocationData] = useState('');
-    const [recommendation, setRecommendation] = useState('');
     const [convertedAddress, setConvertedAddress] = useState('');
+    const [recommendation, setRecommendation] = useState('');
     const [errorMsg, setErrorMsg] = useState(null);
     const [isModalVisible, setModalVisible] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     const { user } = useAuth();
-
-
     const { language } = useLanguage();
 
     useEffect(() => {
-        i18n.locale = language;
+        i18n.locale = language || 'en';
     }, [language]);
-
-    i18n.locale = i18n.locale ?? 'en'
-
-    const storePredictionToFirestore = async (prediction) => {
-
-        if (user) {
-            try {
-                console.log("Firebase db: ", db);
-                console.log('user : ',user);
-                const predictionRef = collection(db, 'history');
-                const record = {
-                    type : 'Fertilizer',
-                    prediction,
-                    userId: user.uid,    
-                    timestamp: new Date().toISOString(),
-                  };
-                  
-
-                await addDoc(predictionRef, record);
-                console.log('Prediction saved to Firestore:', record);
-            } catch (error) {
-                console.error('Error storing prediction in Firestore:', error);
-            }
-        }
-
-    };
-
-
 
     const clearData = () => {
         setSoilReport(null);
@@ -66,21 +37,18 @@ const FertilizerRecommendation = () => {
     };
 
     const selectSoilReport = async () => {
-        console.log("soil report selected");
         try {
             const pickedFile = await DocumentPicker.getDocumentAsync({
                 type: 'application/pdf',
                 copyToCacheDirectory: true,
-
             });
-            console.log("Picked file : ", pickedFile.assets[0].name);
             if (!pickedFile.canceled && pickedFile.assets.length > 0) {
                 setSoilReport(pickedFile.assets[0]);
             }
         } catch (err) {
-            setErrorMsg('Error: Error picking file');
+            setErrorMsg('Error picking file');
         }
-    }
+    };
 
     const fetchAddress = async (lat, lon) => {
         try {
@@ -107,10 +75,7 @@ const FertilizerRecommendation = () => {
         } catch (error) {
             setErrorMsg('Error getting location');
         }
-
-
     };
-
 
     const convertFileToBase64 = (file) => {
         return new Promise((resolve, reject) => {
@@ -121,46 +86,51 @@ const FertilizerRecommendation = () => {
         });
     };
 
+    const storePredictionToFirestore = async (prediction) => {
+        if (user) {
+            try {
+                const predictionRef = collection(db, 'history');
+                const record = {
+                    type: 'Fertilizer',
+                    prediction,
+                    userId: user.uid,
+                    timestamp: new Date().toISOString(),
+                };
+                await addDoc(predictionRef, record);
+                console.log('Prediction saved to Firestore:', record);
+            } catch (error) {
+                console.error('Error storing prediction in Firestore:', error);
+            }
+        }
+    };
 
     const getDetails = async () => {
-        console.log("get Details called");
-        console.log("soil report : ", soilReport);
-        console.log("crop type :", cropType);
-        console.log("location :", locationData);
+        if (!soilReport || !cropType || !locationData) {
+            console('fertilizerRecommendation.provideAllInputs');
+            return;
+        }
 
-        // if (!soilReport || !cropType || !locationData) {
-        //     setErrorMsg("Please provide all inputs.");
-        //     return;
-        // }
-
-
+        setIsLoading(true);
+        setErrorMsg('');
+        setRecommendation('');
 
         try {
-            setErrorMsg('');
-            setRecommendation('');
-
             const [lat, lon] = locationData.split(',').map(coord => parseFloat(coord.trim()));
-            let report = null;
-            let response = null;
+            let response;
+
             if (Platform.OS === 'web') {
-                console.log("web platform");
-                console.log('report uri: ', soilReport.uri);
                 const responseBlob = await fetch(soilReport.uri);
                 const blob = await responseBlob.blob();
                 const base64File = await convertFileToBase64(blob);
-                console.log("base 64 : ", base64File);
-                response = await fetch("https://ecoyieldapi.onrender.com/fertilizer-prediction-64/?lat=10.996202&lon=76.932281&crop_type=Sugarcane", {
+
+                response = await fetch(`https://ecoyieldapi.onrender.com/fertilizer-prediction-64/?lat=${lat}&lon=${lon}&crop_type=${cropType}`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
                     },
-                    body: JSON.stringify({
-                        base64_pdf: base64File
-                    }),
+                    body: JSON.stringify({ base64_pdf: base64File }),
                 });
-            }
-            else {
-
+            } else {
                 const formData = new FormData();
                 formData.append('file', {
                     uri: soilReport.uri,
@@ -168,23 +138,14 @@ const FertilizerRecommendation = () => {
                     name: 'soilreport.pdf',
                 });
 
-                console.log("Form data : ", formData);
-
-
                 response = await fetch(`https://ecoyieldapi.onrender.com/fertilizer-prediction/?lat=${lat}&lon=${lon}&crop_type=${cropType}`, {
                     method: 'POST',
-                    headers: {
-                        "Content-Type": "multipart/form-data"
-                    },
+                    headers: { "Content-Type": "multipart/form-data" },
                     body: formData,
                 });
-
             }
 
-            console.log("Response : ", response);
             const data = await response.json();
-            console.log("Data : ", data);
-            console.log("Response from /fertilizer-prediction/: ", data);
             if (data.recommended_fertilizer) {
                 await storePredictionToFirestore(data.recommended_fertilizer);
                 setRecommendation(`Recommended Fertilizer: ${data.recommended_fertilizer}`);
@@ -192,13 +153,11 @@ const FertilizerRecommendation = () => {
             } else {
                 setErrorMsg("Failed to get fertilizer recommendation.");
             }
-
-
         } catch (error) {
-            console.error(" Error uploading PDF:", error);
+            console.error("Error uploading PDF:", error);
             setErrorMsg("Failed to upload PDF.");
-        }
-        finally {
+        } finally {
+            setIsLoading(false);
             clearData();
         }
     };
@@ -206,218 +165,94 @@ const FertilizerRecommendation = () => {
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView contentContainerStyle={styles.scroll}>
-                <View>
-                    {user && <Text>{user.email}</Text>}
-                    <Text style={styles.header}>{i18n.t('fertilizerRecommendation.title')}</Text>
-                </View>
+                <Text style={styles.header}>{i18n.t('fertilizerRecommendation.title')}</Text>
 
-
-                <View style={styles.section}>
-                    <Text style={styles.label}>{i18n.t('fertilizerRecommendation.uploadreport')}</Text>
-                    <TouchableOpacity style={styles.button} onPress={selectSoilReport}>
-                        <Text style={styles.buttonText}>{i18n.t('fertilizerRecommendation.selectReportBtm')}</Text>
-                    </TouchableOpacity>
-                    {soilReport && (
-                        <View style={styles.fileInfo}>
-                            <Text style={styles.text}>Selected file: {soilReport.name}</Text>
-                            <TouchableOpacity onPress={() => setSoilReport(null)}>
-                                <Text style={styles.removeText}>{i18n.t('fertilizerRecommendation.remove')}</Text>
+                {isLoading ? (
+                    <ActivityIndicator />
+                ) : (
+                    <>
+                        <View style={styles.section}>
+                            <Text style={styles.label}>{i18n.t('fertilizerRecommendation.uploadreport')}</Text>
+                            <TouchableOpacity style={styles.button} onPress={selectSoilReport}>
+                                <Text style={styles.buttonText}>{i18n.t('fertilizerRecommendation.selectReportBtm')}</Text>
                             </TouchableOpacity>
+                            {soilReport && (
+                                <View style={styles.fileInfo}>
+                                    <Text style={styles.text}>Selected file: {soilReport.name}</Text>
+                                    <TouchableOpacity onPress={() => setSoilReport(null)}>
+                                        <Text style={styles.removeText}>{i18n.t('fertilizerRecommendation.remove')}</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            )}
                         </View>
-                    )}
-                </View>
 
+                        <View style={styles.section}>
+                            <Text style={styles.label}>{i18n.t('fertilizerRecommendation.selectCrop')}</Text>
+                            <View style={styles.pickerContainer}>
+                                <Picker selectedValue={cropType} onValueChange={setCropType}>
+                                    <Picker.Item label={i18n.t('fertilizerRecommendation.cropTypes.select')} value="" />
+                                    <Picker.Item label="Maize" value="Maize" />
+                                    <Picker.Item label="Sugarcane" value="Sugarcane" />
+                                    <Picker.Item label="Cotton" value="Cotton" />
+                                    <Picker.Item label="Paddy" value="Paddy" />
+                                    <Picker.Item label="Wheat" value="Wheat" />
+                                </Picker>
+                            </View>
+                        </View>
 
-                <View style={styles.section}>
-                    <Text style={styles.label}>{i18n.t('fertilizerRecommendation.title')}</Text>
-                    <View style={styles.pickerContainer}>
-                        <Picker selectedValue={cropType} onValueChange={setCropType}>
-                            <Picker.Item label={i18n.t('fertilizerRecommendation.cropTypes.select')} value="" />
-                            <Picker.Item label={i18n.t('fertilizerRecommendation.cropTypes.maize')} value="Maize" />
-                            <Picker.Item label={i18n.t('fertilizerRecommendation.cropTypes.sugarcane')} value="Sugarcane" />
-                            <Picker.Item label={i18n.t('fertilizerRecommendation.cropTypes.cotton')} value="Cotton" />
-                            <Picker.Item label={i18n.t('fertilizerRecommendation.cropTypes.paddy')} value="Paddy" />
-                            <Picker.Item label={i18n.t('fertilizerRecommendation.cropTypes.wheat')} value="Wheat" />
-                        </Picker>
-
-                    </View>
-                </View>
-
-
-                <View style={styles.section}>
-                    <Text style={styles.label}>{i18n.t('fertilizerRecommendation.getLocation')}</Text>
-                    <TouchableOpacity style={styles.button} onPress={getLocation}>
-                        <Text style={styles.buttonText}>{i18n.t('fertilizerRecommendation.fetchLocation')}</Text>
-                    </TouchableOpacity>
-                    {locationData ? <Text style={styles.text}>{locationData}</Text> : null}
-                    {convertedAddress ? <Text style={styles.text}>{convertedAddress}</Text> : null}
-                    {errorMsg && <Text style={styles.error}>{errorMsg}</Text>}
-                </View>
-
-
-                <View style={styles.section}>
-                    <TouchableOpacity style={styles.submitButton} onPress={getDetails}>
-                        <Text style={styles.submitText}>{i18n.t('fertilizerRecommendation.getRecommendation')}</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={styles.clearButton} onPress={clearData}>
-                        <Text style={styles.clearText}>{i18n.t('fertilizerRecommendation.clear')}</Text>
-                    </TouchableOpacity>
-                </View>
-
-                <Modal
-                    animationType="slide"
-                    transparent={true}
-                    visible={isModalVisible}
-                    onRequestClose={() => setModalVisible(false)}
-                >
-                    <View style={styles.modalContainer}>
-                        <View style={styles.modalView}>
-                            <Text style={styles.modalTitle}>{i18n.t('fertilizerRecommendation.title')}</Text>
-                            <Text style={styles.modalText}>{recommendation}</Text>
-
-                            <TouchableOpacity
-                                style={styles.closeButton}
-                                onPress={() => setModalVisible(false)}
-                            >
-                                <Text style={styles.closeButtonText}>{i18n.t('fertilizerRecommendation.title')}</Text>
+                        <View style={styles.section}>
+                            <Text style={styles.label}>{i18n.t('fertilizerRecommendation.getLocation')}</Text>
+                            <TouchableOpacity style={styles.button} onPress={getLocation}>
+                                <Text style={styles.buttonText}>{i18n.t('fertilizerRecommendation.fetchLocation')}</Text>
                             </TouchableOpacity>
+                            {locationData && <Text style={styles.text}>{locationData}</Text>}
+                            {convertedAddress && <Text style={styles.text}>{convertedAddress}</Text>}
                         </View>
-                    </View>
-                </Modal>
 
+                        {errorMsg && <Text style={styles.error}>{errorMsg}</Text>}
+
+                        <TouchableOpacity style={styles.submitBtn} onPress={getDetails}>
+                            <Text style={styles.buttonText}>{i18n.t('fertilizerRecommendation.getRecommendation')}</Text>
+                        </TouchableOpacity>
+
+                        <Modal visible={isModalVisible} animationType="slide" transparent={true}>
+                            <View style={styles.modalContainer}>
+                                <View style={styles.modalContent}>
+                                    <Text style={styles.recommendationText}>{recommendation}</Text>
+                                    <TouchableOpacity onPress={() => setModalVisible(false)}>
+                                        <Text style={styles.closeText}>Close</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        </Modal>
+                    </>
+                )}
             </ScrollView>
         </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: "#f9f9f9"
-    },
-    scroll: {
-        padding: 20,
-    },
-    header: {
-        fontSize: 24,
+    container: { flex: 1, backgroundColor: '#f5f5f5' },
+    scroll: { padding: 20 },
+    header: {  fontSize: 24,
         fontWeight: 'bold',
-        marginBottom: 20,
-        textAlign: 'center',
-        color: '#3A3A3A',
-    },
-    modalContainer: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: "rgba(0,0,0,0.5)",
-    },
-    modalView: {
-        backgroundColor: "white",
-        borderRadius: 20,
-        padding: 30,
-        alignItems: "center",
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-        elevation: 5,
-        width: '80%',
-    },
-    modalTitle: {
-        fontSize: 20,
-        fontWeight: "bold",
-        marginBottom: 10,
-        color: '#28A745',
-    },
-    modalText: {
-        color: '#000000',
-        fontSize: 16,
-        textAlign: "center",
-        marginBottom: 20,
-    },
-    closeButton: {
-        backgroundColor: "#C62828",
-        borderRadius: 10,
-        paddingVertical: 10,
-        paddingHorizontal: 20,
-    },
-    closeButtonText: {
-        color: "white",
-        fontSize: 16,
-    },
-
-    section: {
-        marginBottom: 20,
-        backgroundColor: '#fff',
-        padding: 15,
-        borderRadius: 12,
-        shadowColor: "#000",
-        shadowOpacity: 0.1,
-        shadowRadius: 5,
-        elevation: 2,
-    },
-    label: {
-        fontSize: 16,
-        fontWeight: '600',
-        marginBottom: 10,
-        color: '#444',
-    },
-    button: {
-        backgroundColor: '#007AFF',
-        paddingVertical: 10,
-        borderRadius: 10,
-        alignItems: 'center',
-    },
-    buttonText: {
-        color: '#fff',
-        fontSize: 16,
-    },
-    submitButton: {
-        backgroundColor: '#28A745',
-        paddingVertical: 12,
-        borderRadius: 10,
-        alignItems: 'center',
-        marginBottom: 10,
-    },
-    submitText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    clearButton: {
-        backgroundColor: '#e52222',
-        paddingVertical: 12,
-        borderRadius: 10,
-        alignItems: 'center',
-    },
-    clearText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    pickerContainer: {
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 10,
-        overflow: 'hidden',
-    },
-    fileInfo: {
-        marginTop: 10,
-    },
-    text: {
-        fontSize: 14,
-        color: '#333',
-        marginTop: 5,
-    },
-    removeText: {
-        color: '#FF3B30',
-        marginTop: 5,
-    },
-    error: {
-        color: 'red',
-        marginTop: 10,
-    }
+        marginBottom: 30,
+        textAlign: 'center', },
+    section: { marginBottom: 20 },
+    label: { fontSize: 16, marginBottom: 8 },
+    button: { backgroundColor: '#007BFF', padding: 12, borderRadius: 10 },
+    buttonText: { color: '#fff', textAlign: 'center', fontWeight: '600' },
+    submitBtn: { backgroundColor: 'green', padding: 12, borderRadius: 10, marginTop: 10 },
+    pickerContainer: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8 },
+    text: { marginTop: 10, fontSize: 14 },
+    removeText: { color: 'red', marginTop: 5 },
+    error: { color: 'red', fontWeight: 'bold' },
+    modalContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' },
+    modalContent: { backgroundColor: 'white', padding: 20, borderRadius: 10, width: '80%', alignItems: 'center' },
+    recommendationText: { fontSize: 16, marginBottom: 15 },
+    closeText: { color: '#007BFF', fontWeight: 'bold' },
+    fileInfo: { marginTop: 10 },
 });
 
 export default FertilizerRecommendation;

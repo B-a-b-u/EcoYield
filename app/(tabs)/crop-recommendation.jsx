@@ -1,82 +1,69 @@
-import { Text, View, TouchableOpacity, StyleSheet, ScrollView, Modal } from "react-native"
+import { Text, View, TouchableOpacity, StyleSheet, ScrollView, Modal } from "react-native";
 import { useState, useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Location from 'expo-location';
 import * as DocumentPicker from 'expo-document-picker';
 import axios from "axios";
-import { getLocales } from 'expo-localization';
 import i18n from '@/constants/language';
 import { useLanguage } from '@/components/language-context';
-import { db } from '@/config/firebase'
+import { db } from '@/config/firebase';
 import { useAuth } from "@/components/auth-context";
 import { collection, addDoc } from 'firebase/firestore';
+import ActivityIndicator from "../../components/ActivityIndicator";
 
 const CropRecommendation = () => {
-
     const [soilReport, setSoilReport] = useState(null);
     const [locationData, setLocationData] = useState('');
     const [recommendation, setRecommendation] = useState('');
     const [convertedAddress, setConvertedAddress] = useState('');
     const [errorMsg, setErrorMsg] = useState(null);
     const [isModalVisible, setModalVisible] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     const { language } = useLanguage();
     const { user } = useAuth();
-
 
     useEffect(() => {
         i18n.locale = language;
     }, [language]);
 
-    i18n.locale = i18n.locale ?? 'en'
-
-        const storePredictionToFirestore = async (prediction) => {
-    
-            if (user) {
-                try {
-                    console.log("Firebase db: ", db);
-                    console.log('user : ',user);
-                    const predictionRef = collection(db, 'history');
-                    const record = {
-                        type : 'Crop',
-                        prediction,
-                        userId: user.uid,    
-                        timestamp: new Date().toISOString(),
-                      };
-                      
-    
-                    await addDoc(predictionRef, record);
-                    console.log('Prediction saved to Firestore:', record);
-                } catch (error) {
-                    console.error('Error storing prediction in Firestore:', error);
-                }
+    const storePredictionToFirestore = async (prediction) => {
+        if (user) {
+            try {
+                const predictionRef = collection(db, 'history');
+                const record = {
+                    type: 'Crop',
+                    prediction,
+                    userId: user.uid,
+                    timestamp: new Date().toISOString(),
+                };
+                await addDoc(predictionRef, record);
+                console.log('Prediction saved to Firestore:', record);
+            } catch (error) {
+                console.error('Error storing prediction in Firestore:', error);
             }
-    
-        };
-
+        }
+    };
 
     const selectSoilReport = async () => {
-        console.log("soil report selected");
         try {
             const pickedFile = await DocumentPicker.getDocumentAsync({
                 type: 'application/pdf',
                 copyToCacheDirectory: true,
             });
-            console.log("Picked file : ", pickedFile.assets[0].name);
             if (!pickedFile.canceled && pickedFile.assets.length > 0) {
                 setSoilReport(pickedFile.assets[0]);
             }
         } catch (err) {
             setErrorMsg('Error: Error picking file');
         }
-    }
+    };
 
     const clearData = () => {
         setSoilReport(null);
         setLocationData('');
         setConvertedAddress('');
     };
-
 
     const fetchAddress = async (lat, lon) => {
         try {
@@ -106,9 +93,6 @@ const CropRecommendation = () => {
     };
 
     const get_recommendation = async () => {
-        console.log("Get Recommendation called");
-        console.log("soil report : ", soilReport);
-        console.log("location :", locationData);
         if (!soilReport || !locationData) {
             setErrorMsg("Fill All Fields");
             return;
@@ -116,7 +100,7 @@ const CropRecommendation = () => {
         try {
             setErrorMsg('');
             setRecommendation('');
-
+            setIsLoading(true);
             const [lat, lon] = locationData.split(',').map(coord => parseFloat(coord.trim()));
             const formData = new FormData();
             formData.append('file', {
@@ -125,72 +109,71 @@ const CropRecommendation = () => {
                 name: 'soilreport.pdf',
             });
 
-
             const response = await fetch(`https://ecoyieldapi.onrender.com/crop-prediction/?lat=${lat}&lon=${lon}`, {
                 method: 'POST',
                 body: formData,
             });
-            const data = await response.json()
-            console.log("response from cr : ", data);
+            const data = await response.json();
             if (data) {
                 setRecommendation(data.recommended_crop);
                 await storePredictionToFirestore(data.recommended_crop);
+                setIsLoading(false);
                 setModalVisible(true);
             }
-        }
-        catch (error) {
+        } catch (error) {
             console.error("Error uploading Data:", error);
             setErrorMsg("Failed to upload Data.");
-        }
-        finally {
+        } finally {
             clearData();
         }
-    }
+    };
+
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView contentContainerStyle={styles.scroll}>
-                <View>
-                    <Text style={styles.header}>{i18n.t('cropRecommendation.title')}</Text>
-                </View>
+                <Text style={styles.header}>{i18n.t('cropRecommendation.title')}</Text>
 
+                {
+                    isLoading ? (
+                        <ActivityIndicator />
+                    ) : (
+                        <>
+                            <View style={styles.section}>
+                                <Text style={styles.label}>{i18n.t('cropRecommendation.uploadreport')}</Text>
+                                <TouchableOpacity style={styles.button} onPress={selectSoilReport}>
+                                    <Text style={styles.buttonText}>{i18n.t('cropRecommendation.selectReportBtm')}</Text>
+                                </TouchableOpacity>
+                                {soilReport && (
+                                    <View style={styles.fileInfo}>
+                                        <Text style={styles.text}>Selected file: {soilReport.name}</Text>
+                                        <TouchableOpacity onPress={() => setSoilReport(null)}>
+                                            <Text style={styles.removeText}>{i18n.t('cropRecommendation.remove')}</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                )}
+                            </View>
 
-                <View style={styles.section}>
-                    <Text style={styles.label}>{i18n.t('cropRecommendation.uploadreport')}</Text>
-                    <TouchableOpacity style={styles.button} onPress={selectSoilReport}>
-                        <Text style={styles.buttonText}>{i18n.t('cropRecommendation.selectReportBtm')}</Text>
-                    </TouchableOpacity>
-                    {soilReport && (
-                        <View style={styles.fileInfo}>
-                            <Text style={styles.text}>Selected file: {soilReport.name}</Text>
-                            <TouchableOpacity onPress={() => setSoilReport(null)}>
-                                <Text style={styles.removeText}>{i18n.t('cropRecommendation.remove')}</Text>
-                            </TouchableOpacity>
-                        </View>
-                    )}
-                </View>
+                            <View style={styles.section}>
+                                <Text style={styles.label}>{i18n.t('cropRecommendation.getLocation')}</Text>
+                                <TouchableOpacity style={styles.button} onPress={getLocation}>
+                                    <Text style={styles.buttonText}>{i18n.t('cropRecommendation.fetchLocation')}</Text>
+                                </TouchableOpacity>
+                                {locationData ? <Text style={styles.text}>{locationData}</Text> : null}
+                                {convertedAddress ? <Text style={styles.text}>Address: {convertedAddress}</Text> : null}
+                                {errorMsg && <Text style={styles.error}>{errorMsg}</Text>}
+                            </View>
 
-
-
-                <View style={styles.section}>
-                    <Text style={styles.label}>{i18n.t('cropRecommendation.getLocation')}</Text>
-                    <TouchableOpacity style={styles.button} onPress={getLocation}>
-                        <Text style={styles.buttonText}>{i18n.t('cropRecommendation.fetchLocation')}</Text>
-                    </TouchableOpacity>
-                    {locationData ? <Text style={styles.text}>{locationData}</Text> : null}
-                    {convertedAddress ? <Text style={styles.text}>Address: {convertedAddress}</Text> : null}
-                    {errorMsg && <Text style={styles.error}>{errorMsg}</Text>}
-                </View>
-
-
-                <View style={styles.section}>
-                    <TouchableOpacity style={styles.submitButton} onPress={get_recommendation}>
-                        <Text style={styles.submitText}>{i18n.t('cropRecommendation.getRecommendation')}</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={styles.clearButton} onPress={clearData}>
-                        <Text style={styles.clearText}>{i18n.t('cropRecommendation.clear')}</Text>
-                    </TouchableOpacity>
-                </View>
+                            <View style={styles.section}>
+                                <TouchableOpacity style={styles.submitButton} onPress={get_recommendation}>
+                                    <Text style={styles.submitText}>{i18n.t('cropRecommendation.getRecommendation')}</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={styles.clearButton} onPress={clearData}>
+                                    <Text style={styles.clearText}>{i18n.t('cropRecommendation.clear')}</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </>
+                    )
+                }
 
                 <Modal
                     animationType="slide"
@@ -202,26 +185,21 @@ const CropRecommendation = () => {
                         <View style={styles.modalView}>
                             <Text style={styles.modalTitle}>{i18n.t('cropRecommendation.title')}</Text>
                             <Text style={styles.modalText}>{recommendation}</Text>
-
-                            <TouchableOpacity
-                                style={styles.closeButton}
-                                onPress={() => setModalVisible(false)}
-                            >
+                            <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
                                 <Text style={styles.closeButtonText}>{i18n.t('cropRecommendation.close')}</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
                 </Modal>
-
             </ScrollView>
         </SafeAreaView>
-    )
-}
+    );
+};
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#f9f9f9"
+        backgroundColor: "#ffffff", 
     },
     scroll: {
         padding: 20,
@@ -229,15 +207,75 @@ const styles = StyleSheet.create({
     header: {
         fontSize: 24,
         fontWeight: 'bold',
-        marginBottom: 20,
+        marginBottom: 30,
         textAlign: 'center',
-        color: '#3A3A3A',
+    },
+    section: {
+        marginBottom: 20,
+        padding: 15,
+          },
+    label: {
+        fontSize: 16,
+        fontWeight: '600',
+        marginBottom: 10,
+        color: '#333',
+    },
+    button: {
+        backgroundColor: '#4CAF50', 
+        paddingVertical: 12,
+        paddingHorizontal: 20,
+        borderRadius: 10,
+    },
+    buttonText: {
+        color: '#fff',
+        fontSize: 16,
+        textAlign: 'center',
+    },
+    submitButton: {
+        backgroundColor: '#007BFF', 
+        paddingVertical: 14,
+        paddingHorizontal: 20,
+        borderRadius: 10,
+        marginBottom: 10,
+    },
+    submitText: {
+        color: '#fff',
+        fontSize: 16,
+        textAlign: 'center',
+    },
+    clearButton: {
+        backgroundColor: '#d32f2f',
+        paddingVertical: 14,
+        paddingHorizontal: 20,
+        borderRadius: 10,
+    },
+    clearText: {
+        color: '#fff',
+        fontSize: 16,
+        textAlign: 'center',
+    },
+    fileInfo: {
+        marginTop: 10,
+    },
+    removeText: {
+        color: '#FF3B30',
+        marginTop: 5,
+    },
+    text: {
+        fontSize: 14,
+        color: '#555',
+        marginTop: 5,
+    },
+    error: {
+        color: '#d9534f', 
+        marginTop: 10,
+        fontSize: 14,
     },
     modalContainer: {
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: "rgba(0,0,0,0.5)",
+        backgroundColor: "rgba(0,0,0,0.7)",
     },
     modalView: {
         backgroundColor: "white",
@@ -252,13 +290,13 @@ const styles = StyleSheet.create({
         width: '80%',
     },
     modalTitle: {
-        fontSize: 20,
+        fontSize: 22,
         fontWeight: "bold",
         marginBottom: 10,
-        color: '#28A745',
+        color: '#28A745', 
     },
     modalText: {
-        color: '#000000',
+        color: '#000',
         fontSize: 16,
         textAlign: "center",
         marginBottom: 20,
@@ -266,86 +304,13 @@ const styles = StyleSheet.create({
     closeButton: {
         backgroundColor: "#FF3B30",
         borderRadius: 10,
-        paddingVertical: 10,
         paddingHorizontal: 20,
+        paddingVertical: 10,
     },
     closeButtonText: {
-        color: "white",
+        color: "#fff",
         fontSize: 16,
     },
-
-    section: {
-        marginBottom: 20,
-        backgroundColor: '#fff',
-        padding: 15,
-        borderRadius: 12,
-        shadowColor: "#000",
-        shadowOpacity: 0.1,
-        shadowRadius: 5,
-        elevation: 2,
-    },
-    label: {
-        fontSize: 16,
-        fontWeight: '600',
-        marginBottom: 10,
-        color: '#444',
-    },
-    button: {
-        backgroundColor: '#007AFF',
-        paddingVertical: 10,
-        borderRadius: 10,
-        alignItems: 'center',
-    },
-    buttonText: {
-        color: '#fff',
-        fontSize: 16,
-    },
-    submitButton: {
-        backgroundColor: '#28A745',
-        paddingVertical: 12,
-        borderRadius: 10,
-        alignItems: 'center',
-        marginBottom: 10,
-    },
-    submitText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    clearButton: {
-        backgroundColor: '#FF3B30',
-        paddingVertical: 12,
-        borderRadius: 10,
-        alignItems: 'center',
-    },
-    clearText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    pickerContainer: {
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 10,
-        overflow: 'hidden',
-    },
-    fileInfo: {
-        marginTop: 10,
-    },
-    text: {
-        fontSize: 14,
-        color: '#333',
-        marginTop: 5,
-    },
-    removeText: {
-        color: '#FF3B30',
-        marginTop: 5,
-    },
-    error: {
-        color: 'red',
-        marginTop: 10,
-    }
 });
-
 
 export default CropRecommendation;
