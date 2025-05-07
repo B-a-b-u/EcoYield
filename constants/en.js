@@ -2,6 +2,14 @@ const en = {
     title : 'EcoYield',
     welcome : 'Welcome to EcoYield',
     subWelcome : 'Sustainable Fertilizer Usage Optimization App',
+    selectLanguage: 'Choose Preferred Language',
+    tabs :{
+        home : "Home",
+        fr : "Fertilizer Recommendation",
+        cr : "Crop Recommendation",
+        nd : "Nutritens Deficiency",
+        profile : "Profile"
+    },
     cropRecommendation: {
         title : 'Crop Recommendation',
         uploadreport: 'Upload Soil Report',
@@ -22,7 +30,7 @@ const en = {
         remove : 'Remove File',
         getLocation : 'Get Location',
         fetchLocation : 'Fetch My Location',
-        getRecommendation : 'Get Crop Recommendation',
+        getRecommendation : 'Get Fertilizer Recommendation',
         clear : 'Clear All',
         cropTypes: {
             select: '-- Select Crop --',
@@ -32,6 +40,16 @@ const en = {
             paddy: 'Paddy',
             wheat: 'Wheat',
           }
+    },
+
+    nutrientsDeficiency : {
+        title : 'Nutrient Deficiency Prediction',
+        uploadImage : 'Upload Image',
+        captureImage : 'Capture Image',
+        removeImage : 'Remove Image',
+        noImage : 'No Image Selected',
+        prediction : 'Prediction',
+        confidence : 'Confidence',
     }
 }
 

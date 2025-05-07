@@ -1,5 +1,5 @@
 import { Text, View, TouchableOpacity, Platform, StyleSheet, ScrollView, Modal } from "react-native"
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Picker } from '@react-native-picker/picker';
 import * as Location from 'expo-location';
@@ -7,7 +7,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
 import axios from "axios";
 import i18n from '@/constants/language';
-import { getLocales } from 'expo-localization';
+import { useLanguage } from '@/components/language-context';
 
 const FertilizerRecommendation = () => {
     const [soilReport, setSoilReport] = useState(null);
@@ -18,7 +18,13 @@ const FertilizerRecommendation = () => {
     const [errorMsg, setErrorMsg] = useState(null);
     const [isModalVisible, setModalVisible] = useState(false);
 
-    i18n.locale = getLocales()[0].languageCode ?? 'en';
+    const { language } = useLanguage();
+
+    useEffect(() => {
+      i18n.locale = language;
+    }, [language]);
+
+    i18n.locale = i18n.locale ?? 'en'
 
 
 

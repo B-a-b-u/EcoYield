@@ -1,18 +1,14 @@
 import { Text, View, TouchableOpacity, StyleSheet, ScrollView, Modal } from "react-native"
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Picker } from '@react-native-picker/picker';
 import * as Location from 'expo-location';
 import * as DocumentPicker from 'expo-document-picker';
 import axios from "axios";
 import { getLocales } from 'expo-localization';
 import i18n from '@/constants/language';
+import { useLanguage } from '@/components/language-context';
 
 const CropRecommendation = () => {
-
-  i18n.locale = getLocales()[0].languageCode ?? 'en';
-  console.log("language cr: ",i18n.locale);
-
 
     const [soilReport, setSoilReport] = useState(null);
     const [locationData, setLocationData] = useState('');
@@ -20,6 +16,15 @@ const CropRecommendation = () => {
     const [convertedAddress, setConvertedAddress] = useState('');
     const [errorMsg, setErrorMsg] = useState(null);
     const [isModalVisible, setModalVisible] = useState(false);
+
+    const { language } = useLanguage();
+
+    useEffect(() => {
+        i18n.locale = language;
+    }, [language]);
+
+    i18n.locale = i18n.locale ?? 'en'
+
 
     const selectSoilReport = async () => {
         console.log("soil report selected");
@@ -75,7 +80,7 @@ const CropRecommendation = () => {
         console.log("Get Recommendation called");
         console.log("soil report : ", soilReport);
         console.log("location :", locationData);
-        if(!soilReport || !locationData){
+        if (!soilReport || !locationData) {
             setErrorMsg("Fill All Fields");
             return;
         }
@@ -98,7 +103,7 @@ const CropRecommendation = () => {
             });
             const data = await response.json()
             console.log("response from cr : ", data);
-            if(data){
+            if (data) {
                 setRecommendation(data.recommended_crop);
                 setModalVisible(true);
             }
@@ -118,7 +123,7 @@ const CropRecommendation = () => {
                     <Text style={styles.header}>{i18n.t('cropRecommendation.title')}</Text>
                 </View>
 
-                
+
                 <View style={styles.section}>
                     <Text style={styles.label}>{i18n.t('cropRecommendation.uploadreport')}</Text>
                     <TouchableOpacity style={styles.button} onPress={selectSoilReport}>
@@ -135,7 +140,7 @@ const CropRecommendation = () => {
                 </View>
 
 
-               
+
                 <View style={styles.section}>
                     <Text style={styles.label}>{i18n.t('cropRecommendation.getLocation')}</Text>
                     <TouchableOpacity style={styles.button} onPress={getLocation}>
@@ -146,7 +151,7 @@ const CropRecommendation = () => {
                     {errorMsg && <Text style={styles.error}>{errorMsg}</Text>}
                 </View>
 
-                
+
                 <View style={styles.section}>
                     <TouchableOpacity style={styles.submitButton} onPress={get_recommendation}>
                         <Text style={styles.submitText}>{i18n.t('cropRecommendation.getRecommendation')}</Text>

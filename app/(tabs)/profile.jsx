@@ -1,6 +1,8 @@
 import { Text, View, TouchableOpacity, StyleSheet } from "react-native"
 import { Link } from "expo-router";
 import { useAuth } from "@/components/auth-context";
+import LanguageSelector from '@/components/LanguageSelector'
+
 
 const Profile = () => {
     const { user, logout } = useAuth();
@@ -12,9 +14,6 @@ const Profile = () => {
           <View style={styles.userCard}>
             <Text style={styles.label}>Email:</Text>
             <Text style={styles.value}>{user.email}</Text>
-  
-            <Text style={styles.label}>UID:</Text>
-            <Text style={styles.value}>{user.uid}</Text>
   
             <TouchableOpacity style={styles.logoutButton} onPress={logout}>
               <Text style={styles.logoutText}>Logout</Text>
@@ -33,6 +32,7 @@ const Profile = () => {
             </Link>
           </View>
         )}
+      <LanguageSelector />
       </View>
     );
   };

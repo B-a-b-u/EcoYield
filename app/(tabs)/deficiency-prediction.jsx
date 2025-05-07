@@ -1,13 +1,24 @@
 import { Text, View, TouchableOpacity, StyleSheet, ScrollView, Alert } from "react-native"
 import * as ImagePicker from 'expo-image-picker';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import i18n from '@/constants/language';
+import { useLanguage } from '@/components/language-context';
 
 const DeficiencyPrediction = () => {
     const [image, setImage] = useState(null);
     const [prediction, setPrediction] = useState(null);
     const [confidence, setConfidence] = useState(0);
+
+    const { language } = useLanguage();
+    
+        useEffect(() => {
+          i18n.locale = language;
+        }, [language]);
+    
+        i18n.locale = i18n.locale ?? 'en'
+    
 
     const uploadImage = async () => {
         console.log('upload image called');
@@ -30,30 +41,26 @@ const DeficiencyPrediction = () => {
     const captureImage = async () => {
         console.log('capture image called');
         try {
-            const result = await ImagePicker.launchCameraAsync(
-                {
-                    mediaTypes: ['images'],
-                    allowsEditing: true,
-                    aspect: [4, 3],
-                    quality: 1,
-                    selectionLimit: 1,
-                }
-            )
-
-            if (result.cancelled) {
-                console.log("User Cancelled Image Capture");
-                return;
-            }
-            else {
-                setImage(result.assets[0]);
-            }
+          const result = await ImagePicker.launchCameraAsync({
+            mediaTypes: ['images'],
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 1,
+            selectionLimit: 1,
+            base64 : true,
+          });
+      
+          if (!result.assets || result.assets.length === 0) {
+            console.log("User Cancelled Image Capture");
+            return;
+          } else {
+            setImage(result.assets[0]);
+          }
+        } catch (error) {
+          console.log("Error on capture : ", error);
         }
-        catch (error) {
-            console.log("Error on capture : ", error);
-        }
-
-
-    }
+      };
+      
 
 
     const removeImage = () => {
@@ -107,14 +114,14 @@ const DeficiencyPrediction = () => {
     return (
         <SafeAreaView style={styles.safeArea}>
             <ScrollView contentContainerStyle={styles.scrollContent}>
-                <Text style={styles.title}>Nutrient Deficiency Prediction</Text>
+                <Text style={styles.title}>{i18n.t('nutrientsDeficiency.title')}</Text>
 
                 <TouchableOpacity style={styles.button} onPress={uploadImage}>
-                    <Text style={styles.buttonText}>📁 Upload Image</Text>
+                    <Text style={styles.buttonText}>📁 {i18n.t('nutrientsDeficiency.uploadImage')}</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.button} onPress={captureImage}>
-                    <Text style={styles.buttonText}>📸 Capture Image</Text>
+                    <Text style={styles.buttonText}>📸 {i18n.t('nutrientsDeficiency.captureImage')}</Text>
                 </TouchableOpacity>
 
                 {image ? (
@@ -126,18 +133,17 @@ const DeficiencyPrediction = () => {
                             transition={1000}
                         />
                         <TouchableOpacity style={styles.removeButton} onPress={removeImage}>
-                            <Text style={styles.removeText}>❌ Remove Image</Text>
+                            <Text style={styles.removeText}>❌ {i18n.t('nutrientsDeficiency.removeImage')}</Text>
                         </TouchableOpacity>
                     </View>
                 ) : (
-                    <Text style={styles.placeholder}>No image selected.</Text>
+                    <Text style={styles.placeholder}>{i18n.t('nutrientsDeficiency.noImage')}</Text>
                 )}
 
                 {prediction && (
                     <View style={styles.resultContainer}>
-                        <Text style={styles.resultText}>Prediction: {prediction}</Text>
-                        <Text style={styles.resultText}>Confidence: {confidence}</Text>
-
+                        <Text style={styles.resultText}>{i18n.t('nutrientsDeficiency.prediction')}: {prediction}</Text>
+                        <Text style={styles.resultText}>{i18n.t('nutrientsDeficiency.confidence')}: {confidence}</Text>
                     </View>
                 )}
 

@@ -1,7 +1,18 @@
 import { Tabs } from "expo-router"
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import i18n from '@/constants/language';
+import { useLanguage } from '@/components/language-context';
+import {useEffect} from 'react';
 
 const TabsLayout = () => {
+
+    const { language } = useLanguage();
+    
+        useEffect(() => {
+          i18n.locale = language;
+        }, [language]);
+    
+        i18n.locale = i18n.locale ?? 'en'
     return (
         <Tabs
             screenOptions={{
@@ -21,7 +32,7 @@ const TabsLayout = () => {
             <Tabs.Screen
                 name="index"
                 options={{
-                    title: 'Home',
+                    title:i18n.t('tabs.home'),
                     tabBarIcon: ({ color }) => <FontAwesome
                         size={28}
                         name="home"
@@ -32,7 +43,7 @@ const TabsLayout = () => {
             <Tabs.Screen
                 name="fertilizer-recommendation"
                 options={{
-                    title: 'Fertilizer',
+                    title: i18n.t('tabs.fr'),
                     tabBarIcon: ({ color }) => <FontAwesome size={28} name="flask" color={color} />,
                 }}
             />
@@ -40,7 +51,7 @@ const TabsLayout = () => {
             <Tabs.Screen
                 name="crop-recommendation"
                 options={{
-                    title: 'Crop',
+                    title: i18n.t('tabs.cr'),
                     tabBarIcon: ({ color }) => <FontAwesome size={28} name="leaf" color={color} />,
                 }}
             />
@@ -48,7 +59,7 @@ const TabsLayout = () => {
             <Tabs.Screen
                 name="deficiency-prediction"
                 options={{
-                    title: 'Nutrients',
+                    title: i18n.t('tabs.nd'),
                     tabBarIcon: ({ color }) => <FontAwesome size={28} name="search" color={color} />,
                 }}
             />
@@ -56,7 +67,7 @@ const TabsLayout = () => {
             <Tabs.Screen
                 name="profile"
                 options={{
-                    title: 'Profile',
+                    title: i18n.t('tabs.profile'),
                     tabBarIcon: ({ color }) => <FontAwesome
                         size={28}
                         name="user"

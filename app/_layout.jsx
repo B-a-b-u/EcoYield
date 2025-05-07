@@ -1,31 +1,42 @@
-import { Stack, Link } from "expo-router";
-import {AuthProvider} from '../components/auth-context';
-import { View, Text, Image, StyleSheet } from "react-native";
-import images from '@/constants/images'
+import { Stack } from 'expo-router';
+import {AuthProvider} from '@/components/auth-context'
+import { UserProvider } from '@/contexts/UserContext';
+import { LanguageProvider } from '@/components/language-context';
+import { View, Text, Image, StyleSheet } from 'react-native';
+import images from '@/constants/images';
+import i18n from '@/constants/language';
+import { useEffect } from 'react';
+import { useLanguage } from '@/components/language-context';
 
 const RootLayout = () => {
-  return (
-    <AuthProvider>
-      <Stack screenOptions={{
-        headerTitle : () => (
-          <View style={styles.headerContainer}>
-          <Image
-            source={images.logo}
-            style={styles.logo}
-          />
-          <Text style={styles.title}>EcoYield</Text>
-        </View>
-      ),
-        headerTitleAlign: 'center',
-        headerTintColor: '#ffffff',
-        headerStyle: { backgroundColor: '#4ea84e', }, 
-      }}>
-        <Stack.Screen name="(tabs)" />
-      </Stack>
-    </AuthProvider>
-  )
-}
+  const { language } = useLanguage();
+    
+        useEffect(() => {
+          i18n.locale = language;
+        }, [language]);
+    
+        i18n.locale = i18n.locale ?? 'en'
 
+  return (
+    <LanguageProvider>
+      <AuthProvider>
+        <Stack screenOptions={{
+          headerTitle: () => (
+            <View style={styles.headerContainer}>
+              <Image source={images.logo} style={styles.logo} />
+              <Text style={styles.title}>{i18n.t('title')}</Text>
+            </View>
+          ),
+          headerTitleAlign: 'center',
+          headerTintColor: '#ffffff',
+          headerStyle: { backgroundColor: '#4ea84e' },
+        }}>
+          <Stack.Screen name="(tabs)" />
+        </Stack>
+      </AuthProvider>
+    </LanguageProvider>
+  );
+};
 
 const styles = StyleSheet.create({
   headerContainer: {

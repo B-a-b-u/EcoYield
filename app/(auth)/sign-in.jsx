@@ -55,8 +55,6 @@ const SignIn = () => {
     return (
         <TouchableWithoutFeedback >
             <SafeAreaView style={styles.container}>
-
-                
                 <KeyboardAvoidingView style={styles.keyboardAvoidingContainer} behavior="padding">
                     <View style={styles.inputContainer}>
                         <Text style={styles.title}>Login</Text>
