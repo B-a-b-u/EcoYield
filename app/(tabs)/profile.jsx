@@ -3,7 +3,7 @@ import { Link } from "expo-router";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/auth-context";
 import LanguageSelector from "@/components/LanguageSelector";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, onSnapshot } from "firebase/firestore";
 import { db } from "@/config/firebase";
 import i18n from '@/constants/language';
 import { useLanguage } from '@/components/language-context';
@@ -15,26 +15,24 @@ const Profile = () => {
       const { language } = useLanguage();
   
 
-  useEffect(() => {
-    const fetchHistory = async () => {
-      if (!user) return;
-
-      try {
+      useEffect(() => {
+        if (!user) return;
+    
         const q = query(collection(db, "history"), where("userId", "==", user.uid));
-        const querySnapshot = await getDocs(q);
-        const data = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-
-        setHistory(data);
-      } catch (error) {
-        console.error("Error fetching history:", error);
-      }
-    };
-
-    fetchHistory();
-  }, []);
+        
+        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+          const data = querySnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+          setHistory(data);
+        }, (error) => {
+          console.error("Error fetching history:", error);
+        });
+    
+        return () => unsubscribe();
+      }, [user]);
+      
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>

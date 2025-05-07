@@ -233,7 +233,7 @@ const FertilizerRecommendation = () => {
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#f5f5f5' },
+    container: { flex: 1, backgroundColor: '#ffffff' },
     scroll: { padding: 20 },
     header: {  fontSize: 24,
         fontWeight: 'bold',
